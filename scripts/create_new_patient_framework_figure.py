@@ -185,11 +185,12 @@ def plot_report_card(ax):
 
 def plot_ml_validation(ax):
     ax.axis("off")
-    ax.set_title("D. ML support validation", loc="left", fontweight="bold", pad=8)
+    ax.set_title("D. Separate ML support validation", loc="left", fontweight="bold", pad=8)
 
     ml_text = (
-        "The patient profile is assigned by transparent clinical rules.\n"
-        "Kaggle ML checks whether similar ABPM feature groups predict related BP labels."
+        "The patient profile is assigned using clear rule-based BP features.\n"
+        "Separate Kaggle ML analysis shows that similar ABPM feature groups\n"
+        "can classify related BP pattern labels."
     )
     add_card(ax, 0.02, 0.82, 0.96, 0.15, ml_text, "#edf2f7", fontsize=7.8)
 
@@ -216,8 +217,8 @@ def plot_ml_validation(ax):
             cell.set_facecolor("#f8fafc" if row % 2 else "#ffffff")
 
     note = (
-        "ML does not make the final clinical decision. It supports the framework by "
-        "showing that ABPM-derived feature groups can classify related abnormal BP patterns."
+        "ML support is not used to make the final clinical decision. It provides separate "
+        "evidence that ABPM feature groups are useful for classifying related BP patterns."
     )
     add_card(ax, 0.02, 0.02, 0.96, 0.14, textwrap.fill(note, width=58), "#eef4f8", fontsize=7.5)
 

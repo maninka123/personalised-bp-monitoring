@@ -149,7 +149,9 @@ The figure shows four parts:
 - line graph: how BP changes over 24 hours
 - profile plot: where the patient lies compared with BP profile regions
 - report card: what the clinician should review next
-- ML support validation: whether similar ABPM feature groups predict related abnormal BP labels in Kaggle
+- separate ML support validation: whether similar ABPM feature groups can classify related BP pattern labels in Kaggle
+
+ML support is not used to make the final clinical decision. It provides separate evidence that ABPM feature groups are useful for classifying related BP patterns.
 
 Regenerate this figure with:
 
@@ -160,6 +162,8 @@ python scripts/create_new_patient_framework_figure.py
 ## Sleep-Aware BP Report Dashboard
 
 The clinical prototype is a **doctor-first, patient-understandable dashboard**. It uses the rule-based Dryad-derived framework and hides machine-learning terms from the clinical interface.
+
+The ML validation table is for the paper, README and research presentation only. It is not shown to doctors or patients in the dashboard.
 
 ```text
 New patient ABPM file
@@ -231,7 +235,7 @@ Page 4: doctor review checklist
 
 ## ML Support Validation
 
-The new-patient profile is assigned by transparent clinical rules. The Kaggle ML model validates that similar ABPM feature groups have predictive value for related abnormal BP labels.
+The new-patient profile is assigned using clear rule-based BP features. Separate Kaggle ML analysis shows that similar ABPM feature groups can classify related BP pattern labels.
 
 | Rule-based feature | Kaggle ML target | What ML validates |
 |---|---|---|
