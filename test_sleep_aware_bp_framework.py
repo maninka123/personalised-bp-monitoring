@@ -83,11 +83,10 @@ class ReportAssistantTests(unittest.TestCase):
         self.assertIn("Diastolic", valid.columns)
         self.assertIn("HR", valid.columns)
 
-    def test_token_status_reports_cloud_providers(self):
+    def test_token_status_reports_gemma_provider(self):
         status = token_status()
         self.assertIn("Hugging Face Gemma 4", status)
-        self.assertIn("Google Gemini", status)
-        self.assertIn("Groq", status)
+        self.assertEqual(list(status.keys()), ["Hugging Face Gemma 4"])
 
 
 if __name__ == "__main__":

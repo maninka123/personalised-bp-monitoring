@@ -8,9 +8,11 @@ import pandas as pd
 import streamlit as st
 
 from bp_report_assistant import (
+    DEFAULT_HF_MODEL,
     answer_report_question,
     build_report_context,
     quick_questions,
+    token_status,
 )
 from clinical_report_utils import (
     build_patient_profile,
@@ -567,32 +569,11 @@ def render_report_assistant(profile: dict[str, Any]) -> None:
         height=90,
     )
 
-    provider_col, model_col = st.columns([0.65, 0.35])
-    with provider_col:
-        provider = st.selectbox(
-            "Answer mode",
-            ["Rule-based", "Hugging Face Gemma 4", "Google Gemini", "Groq"],
-            help="Cloud modes send only the calculated report summary, not raw ABPM rows.",
-        )
-    with model_col:
-        default_model = {
-            "Rule-based": "",
-            "Hugging Face Gemma 4": "google/gemma-4-31B-it:fastest",
-            "Google Gemini": "gemini-2.5-flash",
-            "Groq": "llama-3.3-70b-versatile",
-        }[provider]
-        model = st.text_input("Model override", value=default_model)
-
-    api_key = None
-    if provider != "Rule-based":
-        st.info(
-            "Cloud mode may send the report summary to an external API. Do not include patient names or identifiers in the question."
-        )
-        api_key = st.text_input(
-            "Optional API key for this session",
-            type="password",
-            help="You can also set HF_TOKEN, GEMINI_API_KEY or GROQ_API_KEY in the environment.",
-        )
+    hf_status = token_status()["Hugging Face Gemma 4"]
+    st.info(
+        f"Assistant model: Hugging Face Gemma 4. Token status: {hf_status}. "
+        "Only the calculated report summary is sent to the model."
+    )
 
     if st.button("Ask about this report", type="primary"):
         with st.spinner("Preparing report explanation..."):
@@ -600,9 +581,7 @@ def render_report_assistant(profile: dict[str, Any]) -> None:
                 response = answer_report_question(
                     typed_question,
                     context,
-                    provider=provider,
-                    api_key=api_key or None,
-                    model=model or None,
+                    model=DEFAULT_HF_MODEL,
                 )
                 st.session_state.assistant_transcript.append(
                     {

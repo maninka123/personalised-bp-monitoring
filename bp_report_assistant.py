@@ -24,14 +24,10 @@ CONFIG_PATH = CONFIG_DIR / "tokens.json"
 
 PROVIDER_ENV = {
     "Hugging Face Gemma 4": "HF_TOKEN",
-    "Google Gemini": "GEMINI_API_KEY",
-    "Groq": "GROQ_API_KEY",
 }
 
 PROVIDER_CONFIG_KEYS = {
     "Hugging Face Gemma 4": "hugging_face",
-    "Google Gemini": "gemini",
-    "Groq": "groq",
 }
 
 
@@ -90,13 +86,13 @@ def quick_questions() -> dict[str, str]:
 def answer_report_question(
     question: str,
     report_context: dict[str, Any],
-    provider: str = "Rule-based",
+    provider: str = "Hugging Face Gemma 4",
     api_key: str | None = None,
     model: str | None = None,
 ) -> AssistantResponse:
     clean_question = (question or "").strip()
     if not clean_question:
-        return AssistantResponse("Ask a question about the current BP report.", "Rule-based")
+        return AssistantResponse("Ask a question about the current BP report.", "Hugging Face Gemma 4")
 
     if _unsafe_medication_request(clean_question):
         return AssistantResponse(
@@ -104,14 +100,7 @@ def answer_report_question(
             "Safety guardrail",
         )
 
-    provider_key = provider.lower().strip()
-    if provider_key == "hugging face gemma 4":
-        return _cloud_answer_hugging_face(clean_question, report_context, api_key, model)
-    if provider_key == "google gemini":
-        return _cloud_answer_gemini(clean_question, report_context, api_key, model)
-    if provider_key == "groq":
-        return _cloud_answer_groq(clean_question, report_context, api_key, model)
-    return AssistantResponse(rule_based_answer(clean_question, report_context), "Rule-based")
+    return _cloud_answer_hugging_face(clean_question, report_context, api_key, model)
 
 
 def save_api_token(provider: str, token: str) -> Path:
@@ -208,9 +197,8 @@ def _cloud_answer_hugging_face(
     token = _resolve_api_token("Hugging Face Gemma 4", api_key)
     if not token:
         return AssistantResponse(
-            "Hugging Face Gemma 4 is available when HF_TOKEN is set or entered in the app. Using the built-in rule-based explanation instead.\n\n"
-            + rule_based_answer(question, ctx),
-            "Rule-based fallback",
+            "Gemma is not configured yet. Save a Hugging Face token with `python ask_bp_report.py --save-token`, or set HF_TOKEN before starting the app.",
+            "Gemma setup needed",
         )
     payload = {
         "model": model or os.getenv("HF_MODEL", DEFAULT_HF_MODEL),
@@ -220,56 +208,6 @@ def _cloud_answer_hugging_face(
         "max_tokens": 500,
     }
     return AssistantResponse(_post_openai_compatible(HF_CHAT_URL, payload, token), "Hugging Face Gemma 4")
-
-
-def _cloud_answer_gemini(
-    question: str,
-    ctx: dict[str, Any],
-    api_key: str | None,
-    model: str | None,
-) -> AssistantResponse:
-    token = _resolve_api_token("Google Gemini", api_key)
-    if not token:
-        return AssistantResponse(
-            "Gemini API is available when GEMINI_API_KEY is set or entered in the app. Using the built-in rule-based explanation instead.\n\n"
-            + rule_based_answer(question, ctx),
-            "Rule-based fallback",
-        )
-    prompt = _prompt_text(question, ctx)
-    payload = {
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 500},
-    }
-    url = GEMINI_URL_TEMPLATE.format(model=model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash"), api_key=token)
-    data = _post_json(url, payload, None)
-    try:
-        answer = data["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError, TypeError) as exc:
-        raise RuntimeError(f"Unexpected Gemini response: {data}") from exc
-    return AssistantResponse(answer.strip(), "Google Gemini")
-
-
-def _cloud_answer_groq(
-    question: str,
-    ctx: dict[str, Any],
-    api_key: str | None,
-    model: str | None,
-) -> AssistantResponse:
-    token = _resolve_api_token("Groq", api_key)
-    if not token:
-        return AssistantResponse(
-            "Groq is available when GROQ_API_KEY is set or entered in the app. Using the built-in rule-based explanation instead.\n\n"
-            + rule_based_answer(question, ctx),
-            "Rule-based fallback",
-        )
-    payload = {
-        "model": model or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-        "messages": _messages(question, ctx),
-        "stream": False,
-        "temperature": 0.2,
-        "max_tokens": 500,
-    }
-    return AssistantResponse(_post_openai_compatible(GROQ_CHAT_URL, payload, token), "Groq")
 
 
 def _messages(question: str, ctx: dict[str, Any]) -> list[dict[str, str]]:

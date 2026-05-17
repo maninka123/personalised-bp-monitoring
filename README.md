@@ -238,8 +238,7 @@ Ask About This BP Report
         |
         |-- quick buttons: Explain profile, Why flagged, Explain to patient
         |-- custom question box
-        |-- rule-based answers by default
-        |-- optional cloud answer with Gemma 4 / Gemini / Groq
+        |-- Gemma 4 explains the report using the saved Hugging Face token
         |
         v
 Safe explanation only, not medication advice
@@ -268,14 +267,11 @@ It does **not** send raw ABPM rows to the assistant.
 
 No embedding database is needed here because the assistant answers from one small, structured report summary. This keeps the clinical explanation simple and reduces unnecessary data sharing.
 
-Cloud model options:
+Assistant model:
 
-| Mode | How to enable | Default model |
-|---|---|---|
-| Rule-based | No key needed | Built-in report explainer |
-| Hugging Face Gemma 4 | Set `HF_TOKEN` or enter key in app | `google/gemma-4-31B-it:fastest` |
-| Google Gemini | Set `GEMINI_API_KEY` or enter key in app | `gemini-2.5-flash` |
-| Groq | Set `GROQ_API_KEY` or enter key in app | `llama-3.3-70b-versatile` |
+| Model | How it is used |
+|---|---|
+| Hugging Face Gemma 4 | The only visible assistant model in Streamlit, EXE/CLI and npm |
 
 ## Hugging Face Token Setup for Gemma
 
@@ -299,7 +295,7 @@ Run the dashboard:
 streamlit run sleep_aware_bp_report_app.py
 ```
 
-Then open **Ask About This BP Report**, choose **Hugging Face Gemma 4**, and paste the token into the API key box for that session.
+Then open **Ask About This BP Report** and ask the question. There is no model selector or API key box in the app.
 
 You can also set the token before starting Streamlit:
 
@@ -313,7 +309,7 @@ streamlit run sleep_aware_bp_report_app.py
 Save the Hugging Face token once:
 
 ```powershell
-.\SleepAwareBPReportAssistant-v0.1.0-windows-x64.exe --save-token "Hugging Face Gemma 4"
+.\SleepAwareBPReportAssistant-v0.1.0-windows-x64.exe --save-token
 ```
 
 Check token status:
@@ -325,21 +321,21 @@ Check token status:
 Ask with Gemma:
 
 ```powershell
-.\SleepAwareBPReportAssistant-v0.1.0-windows-x64.exe --provider "Hugging Face Gemma 4" --question "Why is this patient flagged?"
+.\SleepAwareBPReportAssistant-v0.1.0-windows-x64.exe --question "Why is this patient flagged?"
 ```
 
 For local Python:
 
 ```bash
-python ask_bp_report.py --save-token "Hugging Face Gemma 4"
-python ask_bp_report.py --provider "Hugging Face Gemma 4" --question "Explain this to the patient"
+python ask_bp_report.py --save-token
+python ask_bp_report.py --question "Explain this to the patient"
 ```
 
 ### npm / Node companion app
 
 The repo includes a small npm companion app in `npm_app/`.
 
-Run with no token, using rule-based fallback:
+Run the npm companion app:
 
 ```bash
 cd npm_app
@@ -349,12 +345,10 @@ npm start
 `npm start` opens an interactive menu where you can:
 
 ```text
-1. Select Rule-based mode
-2. Select Hugging Face Gemma 4
-3. Save a Hugging Face token
-4. Ask quick questions
-5. Ask a custom question
-6. View the report summary JSON sent to the assistant
+1. Ask quick questions
+2. Ask a custom question
+3. View the report summary JSON sent to the assistant
+4. Save or replace the Hugging Face token
 ```
 
 Run one question directly:
@@ -367,7 +361,7 @@ Set token for one terminal session:
 
 ```powershell
 $env:HF_TOKEN="hf_your_token_here"
-npm run ask -- --provider "Hugging Face Gemma 4" --question "Explain this to the patient"
+npm run ask -- --question "Explain this to the patient"
 ```
 
 Or save the token locally for future npm runs:
@@ -375,7 +369,7 @@ Or save the token locally for future npm runs:
 ```bash
 node src/ask-bp-report.mjs --save-token
 node src/ask-bp-report.mjs --token-status
-node src/ask-bp-report.mjs --provider "Hugging Face Gemma 4" --question "What should the doctor review next?"
+node src/ask-bp-report.mjs --question "What should the doctor review next?"
 ```
 
 Safety rule:

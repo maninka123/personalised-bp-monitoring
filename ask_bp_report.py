@@ -11,6 +11,7 @@ from bp_report_assistant import (
     quick_questions,
     save_api_token,
     token_status,
+    DEFAULT_HF_MODEL,
 )
 from clinical_report_utils import build_patient_profile, example_patient_abpm
 
@@ -21,31 +22,20 @@ def main() -> None:
     )
     parser.add_argument("--context", type=Path, help="Optional report context JSON file.")
     parser.add_argument("--question", help="Ask one question and exit.")
-    parser.add_argument(
-        "--provider",
-        default="Rule-based",
-        choices=["Rule-based", "Hugging Face Gemma 4", "Google Gemini", "Groq"],
-        help="Assistant backend. Cloud providers require an API key environment variable.",
-    )
-    parser.add_argument("--model", help="Optional cloud model override.")
-    parser.add_argument("--api-key", help="API key for this run only. Prefer an environment variable or --save-token.")
-    parser.add_argument(
-        "--save-token",
-        choices=["Hugging Face Gemma 4", "Google Gemini", "Groq"],
-        help="Save a provider API token for future EXE/CLI runs.",
-    )
-    parser.add_argument("--token-status", action="store_true", help="Show which cloud tokens are configured.")
+    parser.add_argument("--model", default=DEFAULT_HF_MODEL, help="Gemma model id.")
+    parser.add_argument("--api-key", help="Hugging Face token for this run only. Prefer --save-token.")
+    parser.add_argument("--save-token", action="store_true", help="Save the Hugging Face token for future EXE/CLI runs.")
+    parser.add_argument("--token-status", action="store_true", help="Show whether the Hugging Face token is configured.")
     args = parser.parse_args()
 
     if args.token_status:
-        for provider, status in token_status().items():
-            print(f"{provider}: {status}")
+        print(token_status()["Hugging Face Gemma 4"])
         return
 
     if args.save_token:
-        token = getpass.getpass(f"Paste token for {args.save_token}: ").strip()
-        path = save_api_token(args.save_token, token)
-        print(f"Saved token for {args.save_token} to {path}")
+        token = getpass.getpass("Paste Hugging Face token: ").strip()
+        path = save_api_token("Hugging Face Gemma 4", token)
+        print(f"Saved Hugging Face token to {path}")
         print("The token is stored locally on this computer. Do not commit or share this file.")
         return
 
@@ -54,7 +44,6 @@ def main() -> None:
         response = answer_report_question(
             args.question,
             context,
-            provider=args.provider,
             api_key=args.api_key,
             model=args.model,
         )
@@ -74,7 +63,7 @@ def main() -> None:
             break
         if raw.isdigit() and 1 <= int(raw) <= len(questions):
             raw = questions[int(raw) - 1][1]
-        response = answer_report_question(raw, context, provider=args.provider, api_key=args.api_key, model=args.model)
+        response = answer_report_question(raw, context, api_key=args.api_key, model=args.model)
         print(f"\n[{response.source}]\n{response.answer}")
 
 
