@@ -10,6 +10,11 @@ Kaggle dataset/
 # Generated analysis outputs.
 outputs/
 
+# Local executable builds.
+build/
+dist/
+*.spec
+
 # Local environments and editor files.
 .venv/
 venv/
