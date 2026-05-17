@@ -157,6 +157,78 @@ Regenerate this figure with:
 python scripts/create_new_patient_framework_figure.py
 ```
 
+## Sleep-Aware BP Report Dashboard
+
+The clinical prototype is a **doctor-first, patient-understandable dashboard**. It uses the rule-based Dryad-derived framework and hides machine-learning terms from the clinical interface.
+
+```text
+New patient ABPM file
+        |
+        v
+Automatic sleep-aware feature calculation
+        |
+        v
+Doctor dashboard
+        |
+        v
+Patient-friendly report preview
+        |
+        v
+PDF report for clinical review
+```
+
+Run the dashboard:
+
+```bash
+streamlit run sleep_aware_bp_report_app.py
+```
+
+The app includes an example patient, so it can be opened before uploading new data. For uploaded data, use a CSV or Excel file with at least:
+
+```text
+Time, Systolic, Diastolic
+```
+
+Optional columns:
+
+```text
+Day_Date, MAP, PP, HR, Wake_Sleep
+```
+
+If `Wake_Sleep` is missing, the app uses the sleep start and wake time entered in the sidebar.
+
+Dashboard flow:
+
+```text
+Doctor dashboard
+        |
+        |-- summary cards: 24h BP, awake BP, sleep BP, dipping, surge, variability
+        |-- 24-hour BP curve: systolic/diastolic BP, sleep shading, morning period
+        |-- profile plot: sleep dipping % vs morning surge
+        |-- pattern flags: non-dipper, morning surge, high variability, sustained high BP
+        |-- review points: what the clinician should check next
+```
+
+Patient report flow:
+
+```text
+Patient report
+        |
+        |-- simple explanation of the BP pattern
+        |-- simplified 24-hour curve
+        |-- safe next steps
+        |-- reminder not to change medication without the doctor
+```
+
+Exported PDF pages:
+
+```text
+Page 1: patient summary and overall profile
+Page 2: BP graphs
+Page 3: feature table
+Page 4: doctor review checklist
+```
+
 ## ML Support Validation
 
 The new-patient profile is assigned by transparent clinical rules. The Kaggle ML model validates that similar ABPM feature groups have predictive value for related abnormal BP labels.
@@ -244,6 +316,12 @@ personalised-bp-monitoring/
 ```bash
 pip install -r requirements.txt
 python sleep_aware_bp_framework.py
+```
+
+Run the clinical dashboard:
+
+```bash
+streamlit run sleep_aware_bp_report_app.py
 ```
 
 Run tests:
