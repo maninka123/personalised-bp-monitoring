@@ -2,7 +2,7 @@ import unittest
 
 import pandas as pd
 
-from bp_report_assistant import answer_report_question, build_report_context
+from bp_report_assistant import answer_report_question, build_report_context, token_status
 from clinical_report_utils import build_patient_profile, example_patient_abpm
 from sleep_aware_bp_framework import classify_dipping, filter_valid_bp_readings
 
@@ -82,6 +82,12 @@ class ReportAssistantTests(unittest.TestCase):
         self.assertIn("Systolic", valid.columns)
         self.assertIn("Diastolic", valid.columns)
         self.assertIn("HR", valid.columns)
+
+    def test_token_status_reports_cloud_providers(self):
+        status = token_status()
+        self.assertIn("Hugging Face Gemma 4", status)
+        self.assertIn("Google Gemini", status)
+        self.assertIn("Groq", status)
 
 
 if __name__ == "__main__":

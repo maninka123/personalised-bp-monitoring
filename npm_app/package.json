@@ -1,0 +1,14 @@
+{
+  "name": "bp-report-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Safe Ask About This BP Report CLI using report-summary JSON only.",
+  "scripts": {
+    "ask": "node src/ask-bp-report.mjs",
+    "token:status": "node src/ask-bp-report.mjs --token-status"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

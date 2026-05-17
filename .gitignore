@@ -19,6 +19,7 @@ dist/
 .venv/
 venv/
 .env
+npm_app/.env
 .DS_Store
 .vscode/
 .idea/

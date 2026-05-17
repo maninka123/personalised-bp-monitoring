@@ -277,6 +277,90 @@ Cloud model options:
 | Google Gemini | Set `GEMINI_API_KEY` or enter key in app | `gemini-2.5-flash` |
 | Groq | Set `GROQ_API_KEY` or enter key in app | `llama-3.3-70b-versatile` |
 
+## Hugging Face Token Setup for Gemma
+
+To use Gemma through Hugging Face, create a Hugging Face access token and use it as `HF_TOKEN`.
+
+Recommended steps:
+
+```text
+1. Create or log in to a Hugging Face account.
+2. Open Settings -> Access Tokens.
+3. Create a token with read/inference access.
+4. Accept the Gemma model terms on the Hugging Face model page if prompted.
+5. Use the token in Streamlit, the EXE/CLI, or the npm app.
+```
+
+### Streamlit
+
+Run the dashboard:
+
+```bash
+streamlit run sleep_aware_bp_report_app.py
+```
+
+Then open **Ask About This BP Report**, choose **Hugging Face Gemma 4**, and paste the token into the API key box for that session.
+
+You can also set the token before starting Streamlit:
+
+```powershell
+$env:HF_TOKEN="hf_your_token_here"
+streamlit run sleep_aware_bp_report_app.py
+```
+
+### Windows EXE / Python CLI
+
+Save the Hugging Face token once:
+
+```powershell
+.\SleepAwareBPReportAssistant-v0.1.0-windows-x64.exe --save-token "Hugging Face Gemma 4"
+```
+
+Check token status:
+
+```powershell
+.\SleepAwareBPReportAssistant-v0.1.0-windows-x64.exe --token-status
+```
+
+Ask with Gemma:
+
+```powershell
+.\SleepAwareBPReportAssistant-v0.1.0-windows-x64.exe --provider "Hugging Face Gemma 4" --question "Why is this patient flagged?"
+```
+
+For local Python:
+
+```bash
+python ask_bp_report.py --save-token "Hugging Face Gemma 4"
+python ask_bp_report.py --provider "Hugging Face Gemma 4" --question "Explain this to the patient"
+```
+
+### npm / Node companion app
+
+The repo includes a small npm companion app in `npm_app/`.
+
+Run with no token, using rule-based fallback:
+
+```bash
+cd npm_app
+npm run ask -- --question "Why is this patient flagged?"
+```
+
+Set token for one terminal session:
+
+```powershell
+$env:HF_TOKEN="hf_your_token_here"
+npm run ask -- --provider "Hugging Face Gemma 4" --question "Explain this to the patient"
+```
+
+Or save the token locally for future npm runs:
+
+```bash
+node src/ask-bp-report.mjs --save-token
+node src/ask-bp-report.mjs --token-status
+node src/ask-bp-report.mjs --provider "Hugging Face Gemma 4" --question "What should the doctor review next?"
+```
+
 Safety rule:
 
 ```text

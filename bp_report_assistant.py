@@ -6,6 +6,7 @@ import textwrap
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -18,6 +19,20 @@ DEFAULT_HF_MODEL = "google/gemma-4-31B-it:fastest"
 HF_CHAT_URL = "https://router.huggingface.co/v1/chat/completions"
 GEMINI_URL_TEMPLATE = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
 GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
+CONFIG_DIR = Path(os.getenv("APPDATA") or Path.home() / ".config") / "SleepAwareBPReportAssistant"
+CONFIG_PATH = CONFIG_DIR / "tokens.json"
+
+PROVIDER_ENV = {
+    "Hugging Face Gemma 4": "HF_TOKEN",
+    "Google Gemini": "GEMINI_API_KEY",
+    "Groq": "GROQ_API_KEY",
+}
+
+PROVIDER_CONFIG_KEYS = {
+    "Hugging Face Gemma 4": "hugging_face",
+    "Google Gemini": "gemini",
+    "Groq": "groq",
+}
 
 
 SYSTEM_INSTRUCTION = """
@@ -99,6 +114,34 @@ def answer_report_question(
     return AssistantResponse(rule_based_answer(clean_question, report_context), "Rule-based")
 
 
+def save_api_token(provider: str, token: str) -> Path:
+    provider_name = _canonical_provider(provider)
+    if provider_name not in PROVIDER_CONFIG_KEYS:
+        raise ValueError(f"Token storage is not supported for provider: {provider}")
+    clean_token = token.strip()
+    if not clean_token:
+        raise ValueError("Token is empty.")
+    config = _load_token_config()
+    config[PROVIDER_CONFIG_KEYS[provider_name]] = clean_token
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    CONFIG_PATH.write_text(json.dumps(config, indent=2), encoding="utf-8")
+    return CONFIG_PATH
+
+
+def token_status() -> dict[str, str]:
+    config = _load_token_config()
+    status = {}
+    for provider, env_name in PROVIDER_ENV.items():
+        config_key = PROVIDER_CONFIG_KEYS[provider]
+        if os.getenv(env_name):
+            status[provider] = f"available from environment variable {env_name}"
+        elif config.get(config_key):
+            status[provider] = f"available from saved config {CONFIG_PATH}"
+        else:
+            status[provider] = "not configured"
+    return status
+
+
 def rule_based_answer(question: str, ctx: dict[str, Any]) -> str:
     q = question.lower()
     profile = ctx.get("profile", "the current BP profile")
@@ -162,7 +205,7 @@ def _cloud_answer_hugging_face(
     api_key: str | None,
     model: str | None,
 ) -> AssistantResponse:
-    token = api_key or os.getenv("HF_TOKEN")
+    token = _resolve_api_token("Hugging Face Gemma 4", api_key)
     if not token:
         return AssistantResponse(
             "Hugging Face Gemma 4 is available when HF_TOKEN is set or entered in the app. Using the built-in rule-based explanation instead.\n\n"
@@ -185,7 +228,7 @@ def _cloud_answer_gemini(
     api_key: str | None,
     model: str | None,
 ) -> AssistantResponse:
-    token = api_key or os.getenv("GEMINI_API_KEY")
+    token = _resolve_api_token("Google Gemini", api_key)
     if not token:
         return AssistantResponse(
             "Gemini API is available when GEMINI_API_KEY is set or entered in the app. Using the built-in rule-based explanation instead.\n\n"
@@ -212,7 +255,7 @@ def _cloud_answer_groq(
     api_key: str | None,
     model: str | None,
 ) -> AssistantResponse:
-    token = api_key or os.getenv("GROQ_API_KEY")
+    token = _resolve_api_token("Groq", api_key)
     if not token:
         return AssistantResponse(
             "Groq is available when GROQ_API_KEY is set or entered in the app. Using the built-in rule-based explanation instead.\n\n"
@@ -283,6 +326,37 @@ def _unsafe_medication_request(question: str) -> bool:
     medication_terms = ["medicine", "medication", "drug", "dose", "dosage", "tablet", "pill"]
     action_terms = ["change", "increase", "decrease", "stop", "start", "adjust", "switch"]
     return any(term in lowered for term in medication_terms) and any(term in lowered for term in action_terms)
+
+
+def _resolve_api_token(provider: str, explicit_token: str | None) -> str | None:
+    if explicit_token:
+        return explicit_token.strip()
+    provider_name = _canonical_provider(provider)
+    env_name = PROVIDER_ENV.get(provider_name)
+    if env_name and os.getenv(env_name):
+        return os.getenv(env_name)
+    config_key = PROVIDER_CONFIG_KEYS.get(provider_name)
+    if not config_key:
+        return None
+    return _load_token_config().get(config_key)
+
+
+def _load_token_config() -> dict[str, str]:
+    if not CONFIG_PATH.exists():
+        return {}
+    try:
+        data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return {str(key): str(value) for key, value in data.items() if value}
+
+
+def _canonical_provider(provider: str) -> str:
+    normalized = provider.lower().strip()
+    for name in PROVIDER_CONFIG_KEYS:
+        if normalized == name.lower():
+            return name
+    return provider
 
 
 def _bp_value(sbp: Any, dbp: Any) -> str:
