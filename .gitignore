@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Local data folders. Keep public datasets outside git history.
+24-hour physiological monitoring/
+Kaggle dataset/
+
+# Generated analysis outputs.
+outputs/
+
+# Local environments and editor files.
+.venv/
+venv/
+.env
+.DS_Store
+.vscode/
+.idea/
