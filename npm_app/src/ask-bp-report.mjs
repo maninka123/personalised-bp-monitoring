@@ -36,6 +36,14 @@ const EXAMPLE_CONTEXT = {
   clinical_boundary: "This explains the calculated report only. It is not medication advice."
 };
 
+const QUICK_QUESTIONS = [
+  ["Explain profile", "What does this BP profile mean?"],
+  ["Why flagged?", "Why is this patient flagged?"],
+  ["Explain to patient", "Explain this result to the patient in simple language."],
+  ["What to review next?", "What should the doctor review next?"],
+  ["Is data quality enough?", "Is the data quality enough to interpret the report?"]
+];
+
 function parseArgs(argv) {
   const args = {};
   for (let index = 2; index < argv.length; index += 1) {
@@ -156,8 +164,95 @@ async function askGemma(question, ctx, token, model) {
   return data.choices?.[0]?.message?.content?.trim() || "No answer returned.";
 }
 
+async function interactiveMode(args) {
+  const ctx = loadContext(args.context);
+  const rl = readline.createInterface({ input, output });
+  let provider = "Rule-based";
+  let model = args.model || DEFAULT_HF_MODEL;
+
+  console.log("\nAsk About This BP Report");
+  console.log("This assistant explains the calculated report summary only.");
+  console.log("It does not diagnose, prescribe, or recommend medication changes.\n");
+
+  while (true) {
+    console.log("Model options:");
+    console.log("1. Rule-based (no API key)");
+    console.log(`2. Hugging Face Gemma 4 (${tokenStatus()})`);
+    console.log("3. Save Hugging Face token");
+    console.log("4. Ask a quick question");
+    console.log("5. Ask a custom question");
+    console.log("6. Show report summary JSON");
+    console.log("0. Exit");
+
+    const choice = (await rl.question("\nSelect option: ")).trim();
+    if (choice === "0" || choice.toLowerCase() === "exit") break;
+
+    if (choice === "1") {
+      provider = "Rule-based";
+      console.log("Selected: Rule-based\n");
+      continue;
+    }
+
+    if (choice === "2") {
+      provider = "Hugging Face Gemma 4";
+      const modelInput = await rl.question(`Model [${model}]: `);
+      if (modelInput.trim()) model = modelInput.trim();
+      console.log(`Selected: ${provider} using ${model}\n`);
+      continue;
+    }
+
+    if (choice === "3") {
+      const token = await rl.question("Paste Hugging Face token: ");
+      await saveHfToken(token.trim());
+      console.log("");
+      continue;
+    }
+
+    if (choice === "4") {
+      QUICK_QUESTIONS.forEach(([label, question], index) => {
+        console.log(`${index + 1}. ${label}: ${question}`);
+      });
+      const qIndex = Number((await rl.question("Choose question: ")).trim());
+      if (!Number.isInteger(qIndex) || qIndex < 1 || qIndex > QUICK_QUESTIONS.length) {
+        console.log("Invalid question number.\n");
+        continue;
+      }
+      await printAnswer(QUICK_QUESTIONS[qIndex - 1][1], ctx, provider, model);
+      continue;
+    }
+
+    if (choice === "5") {
+      const question = await rl.question("Question: ");
+      await printAnswer(question, ctx, provider, model);
+      continue;
+    }
+
+    if (choice === "6") {
+      console.log(JSON.stringify(ctx, null, 2));
+      console.log("");
+      continue;
+    }
+
+    console.log("Unknown option.\n");
+  }
+
+  rl.close();
+}
+
+async function printAnswer(question, ctx, provider, model) {
+  const token = resolveHfToken();
+  const answer = provider.toLowerCase().includes("gemma")
+    ? await askGemma(question, ctx, token, model)
+    : ruleBasedAnswer(question, ctx);
+  console.log(`\n[${provider}]\n${answer}\n`);
+}
+
 async function main() {
   const args = parseArgs(process.argv);
+  if (args.interactive) {
+    await interactiveMode(args);
+    return;
+  }
   if (args["token-status"]) {
     console.log(tokenStatus());
     return;

@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Safe Ask About This BP Report CLI using report-summary JSON only.",
   "scripts": {
+    "start": "node src/ask-bp-report.mjs --interactive",
     "ask": "node src/ask-bp-report.mjs",
     "token:status": "node src/ask-bp-report.mjs --token-status"
   },

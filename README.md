@@ -343,6 +343,23 @@ Run with no token, using rule-based fallback:
 
 ```bash
 cd npm_app
+npm start
+```
+
+`npm start` opens an interactive menu where you can:
+
+```text
+1. Select Rule-based mode
+2. Select Hugging Face Gemma 4
+3. Save a Hugging Face token
+4. Ask quick questions
+5. Ask a custom question
+6. View the report summary JSON sent to the assistant
+```
+
+Run one question directly:
+
+```bash
 npm run ask -- --question "Why is this patient flagged?"
 ```
 
