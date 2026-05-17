@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
+import textwrap
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -57,15 +58,18 @@ def _canonical_columns(df: pd.DataFrame) -> pd.DataFrame:
         "time": "Time",
         "time_of_day": "Time",
         "systolic": "Systolic",
+        "sys": "Systolic",
         "sbp": "Systolic",
         "bps": "Systolic",
         "diastolic": "Diastolic",
+        "dia": "Diastolic",
         "dbp": "Diastolic",
         "bpd": "Diastolic",
         "map": "MAP",
         "pp": "PP",
         "pulse pressure": "PP",
         "hr": "HR",
+        "pulse": "HR",
         "heart rate": "HR",
         "heart_rate": "HR",
         "wake_sleep": "Wake_Sleep",
@@ -447,6 +451,7 @@ def create_pdf_report(
     valid: pd.DataFrame,
     profile: dict[str, Any],
     patient_details: dict[str, str],
+    assistant_summary: str | None = None,
 ) -> bytes:
     buffer = BytesIO()
     with PdfPages(buffer) as pdf:
@@ -454,6 +459,8 @@ def create_pdf_report(
         _pdf_graph_page(pdf, valid, profile)
         _pdf_feature_table_page(pdf, profile)
         _pdf_checklist_page(pdf)
+        if assistant_summary:
+            _pdf_assistant_page(pdf, assistant_summary)
     buffer.seek(0)
     return buffer.read()
 
@@ -548,5 +555,26 @@ def _pdf_checklist_page(pdf: PdfPages) -> None:
         "Continue prescribed medicine. Do not change dose without clinician advice. Seek urgent help if high BP is associated with chest pain, weakness, severe headache, confusion or shortness of breath.",
     ]
     ax.text(0.08, 0.92, "\n".join(checklist), va="top", fontsize=14, linespacing=1.7)
+    pdf.savefig(fig, bbox_inches="tight")
+    plt.close(fig)
+
+
+def _pdf_assistant_page(pdf: PdfPages, assistant_summary: str) -> None:
+    fig, ax = plt.subplots(figsize=(8.27, 11.69))
+    ax.axis("off")
+    ax.text(0.08, 0.94, "Ask About This BP Report", fontsize=18, weight="bold", va="top")
+    ax.text(
+        0.08,
+        0.88,
+        "This page explains the already calculated report. It is not a diagnosis or medication instruction.",
+        fontsize=10,
+        va="top",
+        color="#4b5563",
+    )
+    wrapped = "\n\n".join(
+        "\n".join(textwrap.wrap(paragraph, width=82))
+        for paragraph in str(assistant_summary).split("\n\n")
+    )
+    ax.text(0.08, 0.80, wrapped, va="top", fontsize=11.5, linespacing=1.45)
     pdf.savefig(fig, bbox_inches="tight")
     plt.close(fig)

@@ -2,6 +2,8 @@ import unittest
 
 import pandas as pd
 
+from bp_report_assistant import answer_report_question, build_report_context
+from clinical_report_utils import build_patient_profile, example_patient_abpm
 from sleep_aware_bp_framework import classify_dipping, filter_valid_bp_readings
 
 
@@ -46,6 +48,40 @@ class DataQualityTests(unittest.TestCase):
         valid = filter_valid_bp_readings(df)
         self.assertEqual(len(valid), 1)
         self.assertEqual(valid.iloc[0]["Systolic"], 120)
+
+
+class ReportAssistantTests(unittest.TestCase):
+    def test_report_context_uses_summary_not_raw_rows(self):
+        profile = build_patient_profile(example_patient_abpm())
+        context = build_report_context(profile)
+        self.assertIn("profile", context)
+        self.assertIn("review_points", context)
+        self.assertNotIn("raw_readings", context)
+        self.assertNotIn("measurement_datetime", context)
+
+    def test_medication_change_question_is_guarded(self):
+        profile = build_patient_profile(example_patient_abpm())
+        context = build_report_context(profile)
+        response = answer_report_question("Should I increase the medication dose?", context)
+        self.assertIn("treating clinician", response.answer)
+        self.assertEqual(response.source, "Safety guardrail")
+
+    def test_uploaded_common_column_aliases_are_supported(self):
+        raw = pd.DataFrame(
+            {
+                "Time": ["08:00", "09:00", "22:00", "23:00", "00:00", "01:00"],
+                "Sys": [140, 138, 132, 130, 129, 131],
+                "Dia": [85, 84, 78, 76, 75, 76],
+                "Pulse": [72, 73, 68, 67, 66, 67],
+            }
+        )
+        from clinical_report_utils import prepare_patient_abpm
+
+        valid = prepare_patient_abpm(raw)
+        self.assertEqual(len(valid), 6)
+        self.assertIn("Systolic", valid.columns)
+        self.assertIn("Diastolic", valid.columns)
+        self.assertIn("HR", valid.columns)
 
 
 if __name__ == "__main__":

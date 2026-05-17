@@ -1,5 +1,20 @@
 # Sleep-Aware Blood Pressure Profiling Framework
 
+What this project does:
+This project converts raw 24-hour Ambulatory Blood Pressure Monitoring (ABPM) data into an interactive, sleep-aware patient profile for doctors.
+
+Why it is useful for doctors:
+ABPM devices capture detailed 24-hour data, which is difficult to interpret. This framework automates the feature extraction, flags risky patterns (like reverse dipping, morning surges, or high pulse pressure), and displays the patient's individual profile in an interactive web application.
+
+How a new patient is analysed:
+1. Patient wears a 24-hr device
+2. Doctor uploads the standard CSV file (Time, Sys, Dia, HR)
+3. Framework parses raw readings and identifies night/day (either by patient diary or actigraphy)
+4. Framework generates the interactive clinical report.
+
+Rule-Based Patient Pattern Flags:
+The framework applies rules to flag high clinical risk patterns (e.g. Non-dipping, Reverse dipping, Morning surge, Isolated nocturnal hypertension).
+
 This project builds a **sleep-aware blood pressure profiling framework** for personalised hypertension monitoring.
 
 It uses two datasets, but they do different jobs:
@@ -213,6 +228,62 @@ Doctor dashboard
         |-- review points: what the clinician should check next
 ```
 
+Ask-about-report flow:
+
+```text
+Calculated BP report summary
+        |
+        v
+Ask About This BP Report
+        |
+        |-- quick buttons: Explain profile, Why flagged, Explain to patient
+        |-- custom question box
+        |-- rule-based answers by default
+        |-- optional cloud answer with Gemma 4 / Gemini / Groq
+        |
+        v
+Safe explanation only, not medication advice
+```
+
+The assistant receives only the calculated report summary, for example:
+
+```json
+{
+  "profile": "Non-dipper with morning surge and high variability",
+  "priority": "Review soon",
+  "awake_bp": "140/86",
+  "sleep_bp": "138/82",
+  "dipping_percentage": "1.4%",
+  "morning_surge": "24 mmHg",
+  "bp_variability": "High",
+  "review_points": [
+    "Review night BP and sleep quality",
+    "Review morning BP control",
+    "Check stress, caffeine, adherence and measurement quality"
+  ]
+}
+```
+
+It does **not** send raw ABPM rows to the assistant.
+
+No embedding database is needed here because the assistant answers from one small, structured report summary. This keeps the clinical explanation simple and reduces unnecessary data sharing.
+
+Cloud model options:
+
+| Mode | How to enable | Default model |
+|---|---|---|
+| Rule-based | No key needed | Built-in report explainer |
+| Hugging Face Gemma 4 | Set `HF_TOKEN` or enter key in app | `google/gemma-4-31B-it:fastest` |
+| Google Gemini | Set `GEMINI_API_KEY` or enter key in app | `gemini-2.5-flash` |
+| Groq | Set `GROQ_API_KEY` or enter key in app | `llama-3.3-70b-versatile` |
+
+Safety rule:
+
+```text
+The assistant explains the BP report.
+It does not diagnose, prescribe, or recommend medication changes.
+```
+
 Patient report flow:
 
 ```text
@@ -326,6 +397,18 @@ Run the clinical dashboard:
 
 ```bash
 streamlit run sleep_aware_bp_report_app.py
+```
+
+Run the EXE-friendly command-line assistant:
+
+```bash
+python ask_bp_report.py
+```
+
+Ask one question directly:
+
+```bash
+python ask_bp_report.py --question "Why is this patient flagged?"
 ```
 
 Run tests:
