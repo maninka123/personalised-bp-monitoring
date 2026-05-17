@@ -1,123 +1,132 @@
-# Sleep-Aware Blood Pressure Profiling Framework 🩺
+# Sleep-Aware Blood Pressure Profiling Framework
 
-This repository contains a reproducible Python pipeline for a BP-first personalised hypertension monitoring study.
+This repository implements a reproducible BP-first framework for personalised hypertension monitoring.
 
-The framework uses 24-hour ambulatory blood pressure monitoring (ABPM) data with sleep/wake labels to identify interpretable circadian blood pressure profiles. A second ABPM summary dataset is used for lightweight machine-learning experiments.
+It uses 24-hour ABPM readings with sleep/wake labels to build interpretable circadian BP profiles, then uses a second ABPM summary dataset for baseline machine-learning classification.
 
-The goal is decision support for clinician review, not automatic medication advice.
+The output is designed for clinician-review support, not automatic medication advice.
 
-## What This Project Does
+## Full Framework
 
-- Cleans sleep-annotated ABPM readings by removing failed zero-value measurements.
-- Builds participant-level BP features from 24-hour readings.
-- Detects clinically meaningful profiles such as normal dipping, non-dipping, extreme dipping, morning surge, high variability and sustained high BP.
-- Uses participant metadata such as age group, sex, BMI, caffeine and alcohol intake.
-- Runs baseline Kaggle ABPM classification models for circadian rhythm, pulse pressure, BP load and morning surge.
-- Saves trained model artifacts, cross-validated predictions, confusion matrices, model metrics, figures and a compact Markdown summary.
+```mermaid
+flowchart LR
+    A[24-hour ABPM readings] --> B[Remove invalid zero BP rows]
+    B --> C[Split awake vs sleep readings]
+    C --> D[Extract BP features]
+    D --> E[Detect circadian BP profiles]
+    E --> F[Generate monitoring recommendation]
+```
+
+## What We Analyse
+
+```mermaid
+flowchart TD
+    D1[Dryad sleep-aware ABPM] --> F1[Participant-level BP feature table]
+    F1 --> P1[Dipping category]
+    F1 --> P2[Morning surge]
+    F1 --> P3[BP variability]
+    F1 --> P4[Sustained high BP]
+
+    D2[Kaggle ABPM summary features] --> M1[Logistic regression]
+    D2 --> M2[Random forest]
+    M1 --> R1[Metrics and confusion matrices]
+    M2 --> R1
+    R1 --> S1[Saved .joblib models]
+```
+
+## BP Profile Logic
+
+```mermaid
+flowchart LR
+    A[Awake mean SBP] --> C[Dipping percent]
+    B[Sleep mean SBP] --> C
+    C --> D{Profile}
+    D --> E[Normal dipper]
+    D --> F[Non-dipper]
+    D --> G[Reverse dipper]
+    D --> H[Extreme dipper]
+```
+
+Main detected profiles:
+
+| Profile | Meaning |
+|---|---|
+| Normal dipper | Sleep SBP falls by 10-20% |
+| Non-dipper | Sleep SBP fall is below 10% |
+| Reverse dipper | Sleep SBP is higher than awake SBP |
+| Extreme dipper | Sleep SBP falls by more than 20% |
+| Morning surge | SBP rises after waking |
+| Sustained high BP | BP remains high across day and night |
+
+## Generated Plots and Outputs
+
+```text
+outputs/
+|-- dryad_participant_features.csv
+|-- dryad_valid_bp_readings.csv
+|-- kaggle_model_metrics.csv
+|-- kaggle_confusion_matrices.csv
+|-- kaggle_classification_reports.csv
+|-- kaggle_cv_predictions.csv
+|-- kaggle_feature_importance.csv
+|-- analysis_summary.md
+|-- models/
+|   |-- *.joblib
+|-- figures/
+|   |-- figure_1_framework_pipeline.png
+|   |-- figure_2_dipping_categories.png
+|   |-- figure_3_awake_vs_sleep_sbp.png
+|   |-- figure_4_morning_surge_distribution.png
+|   |-- figure_5_example_bp_curves.png
+|   |-- figure_6_kaggle_feature_importance.png
+|   |-- figure_7_clinical_monitoring_pathway.png
+|   |-- confusion_matrices/
+```
+
+Plot flow:
+
+```mermaid
+flowchart LR
+    A[Clean BP data] --> B[Dipping bar plot]
+    A --> C[Awake vs sleep SBP plot]
+    A --> D[Morning surge distribution]
+    A --> E[Example 24-hour BP curves]
+    F[ML models] --> G[Feature importance plot]
+    F --> H[Confusion matrix plots]
+```
 
 ## Datasets
 
-This repository intentionally does **not** include the datasets.
-
-Place the datasets beside `sleep_aware_bp_framework.py` using this structure:
+Datasets are not committed to this repository. Place them beside `sleep_aware_bp_framework.py`:
 
 ```text
 personalised-bp-monitoring/
-├── sleep_aware_bp_framework.py
-├── 24-hour physiological monitoring/
-│   ├── Blood_Pressure_Sleep_Info.xlsx
-│   ├── Participant_Information.csv
-│   ├── Data_Collection_Notes.csv
-│   ├── Per_Participant_Sensor_Data/
-│   └── Output_ECG_Segmentor_data/
-└── Kaggle dataset/
-    └── y4dh3b3tfx-1/
-        └── ABPM-dataset.arff
+|-- sleep_aware_bp_framework.py
+|-- 24-hour physiological monitoring/
+|   |-- Blood_Pressure_Sleep_Info.xlsx
+|   |-- Participant_Information.csv
+|   |-- Data_Collection_Notes.csv
+|-- Kaggle dataset/
+|   |-- y4dh3b3tfx-1/
+|       |-- ABPM-dataset.arff
 ```
 
-Primary dataset:
-
-- Dryad 24-hour physiological monitoring dataset.
-- Used for raw ABPM curve analysis, sleep/wake separation and participant-level BP profiling.
-
-Secondary dataset:
-
-- Kaggle ABPM summary-feature dataset.
-- Used for classification experiments only, not merged with Dryad participants.
-
-## Install
+## Run
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-On macOS/Linux, activate with:
-
-```bash
-source .venv/bin/activate
-```
-
-## Run the Analysis 🚀
-
-```bash
 python sleep_aware_bp_framework.py
 ```
 
-The pipeline writes results to `outputs/`.
+Run tests:
 
-Main outputs:
+```bash
+python -m unittest -v
+```
 
-- `outputs/dryad_participant_features.csv`
-- `outputs/dryad_valid_bp_readings.csv`
-- `outputs/dryad_participant_features_sensitivity_no_device_issues.csv`
-- `outputs/optional_physiology_coverage.csv`
-- `outputs/kaggle_label_distribution.csv`
-- `outputs/kaggle_model_metrics.csv`
-- `outputs/kaggle_confusion_matrices.csv`
-- `outputs/kaggle_classification_reports.csv`
-- `outputs/kaggle_cv_predictions.csv`
-- `outputs/kaggle_feature_importance.csv`
-- `outputs/analysis_summary.md`
-- `outputs/models/*.joblib`
-- `outputs/figures/`
-  - includes `outputs/figures/confusion_matrices/*.png`
+## Models
 
-## Methods in Brief
-
-Dryad ABPM readings are filtered so rows with zero SBP, DBP, MAP or HR are excluded. Features are calculated per participant:
-
-- 24-hour mean SBP/DBP
-- awake and sleep mean SBP/DBP
-- SBP dipping percentage
-- morning surge
-- SBP/DBP variability
-- mean pulse pressure
-- mean arterial pressure
-- HR-SBP correlation
-
-Dipping categories:
-
-| Category | Rule |
-|---|---|
-| Normal dipper | 10-20% sleep SBP fall |
-| Non-dipper | 0-<10% sleep SBP fall |
-| Reverse dipper | Sleep SBP higher than awake SBP |
-| Extreme dipper | >20% sleep SBP fall |
-| Insufficient sleep | Fewer than 3 valid sleep BP readings |
-
-Sustained high BP uses ABPM thresholds:
-
-- 24-hour mean BP: `>=130/80`
-- awake/daytime mean BP: `>=135/85`
-- asleep/night-time mean BP: `>=120/70`
-
-High variability and high morning surge are defined using the top quartile of the Dryad cohort, because the cohort is small.
-
-## Kaggle Modelling
-
-The Kaggle `.arff` file is used for baseline classification only. The pipeline trains:
+The Kaggle dataset is used to train:
 
 - logistic regression
 - random forest
@@ -129,36 +138,8 @@ Targets:
 - `BP-Load`
 - `Morning-Surge`
 
-`BP-Variability` is excluded as a target because it is positive for every row in the dataset.
-
-For each target/model pair, the pipeline saves:
-
-- the final fitted model as a `.joblib` file
-- cross-validated predictions and probabilities
-- AUROC, accuracy, balanced accuracy, precision, recall/sensitivity, specificity, F1 and NPV
-- TN, FP, FN and TP counts
-- a classification report
-- a confusion-matrix PNG
-
-## Tests ✅
-
-```bash
-python -m unittest -v
-```
-
-The tests check:
-
-- normal dipper classification
-- non-dipper classification
-- reverse dipper classification
-- extreme dipper classification
-- insufficient sleep handling
-- zero BP row filtering
+For each target/model pair, the pipeline saves metrics, cross-validated predictions, confusion matrices and a final `.joblib` model.
 
 ## Clinical Boundary
 
-This framework is intended for research and clinician-review support. It should not be used to automatically increase, decrease or time antihypertensive medication.
-
-## Project Status
-
-This is an early research implementation. It is suitable for exploratory analysis, manuscript figures and reproducible feature extraction. Further external validation would be needed before clinical deployment.
+This is a research and monitoring-support framework. It should not be used to automatically change antihypertensive medication.
