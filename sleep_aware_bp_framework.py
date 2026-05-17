@@ -11,12 +11,22 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import balanced_accuracy_score, f1_score, roc_auc_score
+from sklearn.metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
 from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -407,7 +417,15 @@ def kaggle_label_distribution(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def evaluate_classifier(model, X: pd.DataFrame, y: pd.Series) -> dict[str, float]:
+def safe_divide(numerator: float, denominator: float) -> float:
+    return float(numerator / denominator) if denominator else 0.0
+
+
+def evaluate_classifier(
+    model,
+    X: pd.DataFrame,
+    y: pd.Series,
+) -> tuple[dict[str, float], pd.DataFrame, np.ndarray]:
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
     probabilities = np.zeros(len(y), dtype=float)
     predictions = np.zeros(len(y), dtype=int)
@@ -421,14 +439,67 @@ def evaluate_classifier(model, X: pd.DataFrame, y: pd.Series) -> dict[str, float
             probabilities[test_idx] = fitted.decision_function(X.iloc[test_idx])
         predictions[test_idx] = fitted.predict(X.iloc[test_idx])
 
-    return {
+    cm = confusion_matrix(y, predictions, labels=[0, 1])
+    tn, fp, fn, tp = cm.ravel()
+    metrics = {
         "auroc": roc_auc_score(y, probabilities),
-        "f1": f1_score(y, predictions, zero_division=0),
+        "accuracy": accuracy_score(y, predictions),
         "balanced_accuracy": balanced_accuracy_score(y, predictions),
+        "precision": precision_score(y, predictions, zero_division=0),
+        "recall_sensitivity": recall_score(y, predictions, zero_division=0),
+        "specificity": safe_divide(tn, tn + fp),
+        "f1": f1_score(y, predictions, zero_division=0),
+        "npv": safe_divide(tn, tn + fn),
+        "tn": int(tn),
+        "fp": int(fp),
+        "fn": int(fn),
+        "tp": int(tp),
     }
+    prediction_df = pd.DataFrame(
+        {
+            "row_id": np.arange(len(y)),
+            "y_true": y.to_numpy(),
+            "y_pred": predictions,
+            "y_probability": probabilities,
+        }
+    )
+    return metrics, prediction_df, cm
 
 
-def train_kaggle_models(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+def save_confusion_matrix_plot(
+    matrix: np.ndarray,
+    target: str,
+    model_name: str,
+    output_dir: Path,
+) -> None:
+    fig, ax = plt.subplots(figsize=(4.2, 3.8))
+    image = ax.imshow(matrix, cmap="Blues")
+    fig.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
+    ax.set_xticks([0, 1])
+    ax.set_yticks([0, 1])
+    ax.set_xticklabels(["Pred 0", "Pred 1"])
+    ax.set_yticklabels(["True 0", "True 1"])
+    ax.set_title(f"{target} - {model_name}")
+    for row in range(2):
+        for col in range(2):
+            value = int(matrix[row, col])
+            color = "white" if value > matrix.max() / 2 else "black"
+            ax.text(col, row, value, ha="center", va="center", color=color, fontsize=12)
+    fig.tight_layout()
+    safe_target = target.replace("-", "_")
+    output_path = output_dir / f"confusion_matrix_{safe_target}_{model_name}.png"
+    fig.savefig(output_path, dpi=220)
+    plt.close(fig)
+
+
+def train_kaggle_models(
+    df: pd.DataFrame,
+    model_dir: Path,
+    confusion_matrix_dir: Path,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    model_dir.mkdir(parents=True, exist_ok=True)
+    confusion_matrix_dir.mkdir(parents=True, exist_ok=True)
+
     feature_columns = [column for column in df.columns if column not in KAGGLE_LABELS]
     X = df[feature_columns]
     model_specs = {
@@ -455,14 +526,28 @@ def train_kaggle_models(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     metric_rows = []
     importance_rows = []
+    confusion_rows = []
+    report_rows = []
+    prediction_frames = []
     for target in KAGGLE_TARGETS:
         y = df[target].astype(int)
         for model_name, model in model_specs.items():
-            metrics = evaluate_classifier(model, X, y)
+            metrics, predictions, cm = evaluate_classifier(model, X, y)
             metric_rows.append({"target": target, "model": model_name, **metrics})
 
             fitted = clone(model)
             fitted.fit(X, y)
+            model_payload = {
+                "model": fitted,
+                "target": target,
+                "model_name": model_name,
+                "feature_columns": feature_columns,
+                "labels": [0, 1],
+                "random_state": RANDOM_STATE,
+            }
+            safe_target = target.replace("-", "_")
+            joblib.dump(model_payload, model_dir / f"{safe_target}_{model_name}.joblib")
+
             if model_name == "LogisticRegression":
                 importances = np.abs(fitted.named_steps["model"].coef_[0])
             else:
@@ -477,7 +562,40 @@ def train_kaggle_models(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
             ranking["model"] = model_name
             importance_rows.extend(ranking.head(15).to_dict("records"))
 
-    return pd.DataFrame(metric_rows), pd.DataFrame(importance_rows)
+            confusion_rows.extend(
+                [
+                    {"target": target, "model": model_name, "cell": "tn", "count": int(cm[0, 0])},
+                    {"target": target, "model": model_name, "cell": "fp", "count": int(cm[0, 1])},
+                    {"target": target, "model": model_name, "cell": "fn", "count": int(cm[1, 0])},
+                    {"target": target, "model": model_name, "cell": "tp", "count": int(cm[1, 1])},
+                ]
+            )
+            report = classification_report(
+                y,
+                predictions["y_pred"],
+                labels=[0, 1],
+                output_dict=True,
+                zero_division=0,
+            )
+            for label, values in report.items():
+                if isinstance(values, dict):
+                    report_rows.append({"target": target, "model": model_name, "label": label, **values})
+                else:
+                    report_rows.append(
+                        {"target": target, "model": model_name, "label": label, "accuracy": values}
+                    )
+            predictions["target"] = target
+            predictions["model"] = model_name
+            prediction_frames.append(predictions)
+            save_confusion_matrix_plot(cm, target, model_name, confusion_matrix_dir)
+
+    return (
+        pd.DataFrame(metric_rows),
+        pd.DataFrame(importance_rows),
+        pd.DataFrame(confusion_rows),
+        pd.DataFrame(report_rows),
+        pd.concat(prediction_frames, ignore_index=True),
+    )
 
 
 def ensure_output_dirs(output_dir: Path) -> Path:
@@ -746,6 +864,8 @@ def run_pipeline(
     output_dir: Path = OUTPUT_DIR,
 ) -> dict[str, Path]:
     figure_dir = ensure_output_dirs(output_dir)
+    model_dir = output_dir / "models"
+    confusion_matrix_dir = figure_dir / "confusion_matrices"
 
     raw_bp, valid_bp = load_dryad_bp(dryad_dir)
     meta, notes = load_participant_metadata(dryad_dir)
@@ -760,7 +880,11 @@ def run_pipeline(
     coverage = optional_physiology_coverage(dryad_dir)
     kaggle_df = load_kaggle_arff(kaggle_arff)
     labels = kaggle_label_distribution(kaggle_df)
-    metrics, importance = train_kaggle_models(kaggle_df)
+    metrics, importance, confusion_matrices, classification_reports, predictions = train_kaggle_models(
+        kaggle_df,
+        model_dir,
+        confusion_matrix_dir,
+    )
 
     features.to_csv(output_dir / "dryad_participant_features.csv", index=False)
     sensitivity_features.to_csv(
@@ -772,6 +896,9 @@ def run_pipeline(
     labels.to_csv(output_dir / "kaggle_label_distribution.csv", index=False)
     metrics.to_csv(output_dir / "kaggle_model_metrics.csv", index=False)
     importance.to_csv(output_dir / "kaggle_feature_importance.csv", index=False)
+    confusion_matrices.to_csv(output_dir / "kaggle_confusion_matrices.csv", index=False)
+    classification_reports.to_csv(output_dir / "kaggle_classification_reports.csv", index=False)
+    predictions.to_csv(output_dir / "kaggle_cv_predictions.csv", index=False)
 
     thresholds_df = pd.DataFrame(
         [
@@ -813,6 +940,8 @@ def run_pipeline(
         "features": output_dir / "dryad_participant_features.csv",
         "summary": output_dir / "analysis_summary.md",
         "metrics": output_dir / "kaggle_model_metrics.csv",
+        "models": model_dir,
+        "confusion_matrices": output_dir / "kaggle_confusion_matrices.csv",
         "figures": figure_dir,
     }
 

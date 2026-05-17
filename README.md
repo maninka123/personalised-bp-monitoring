@@ -13,7 +13,7 @@ The goal is decision support for clinician review, not automatic medication advi
 - Detects clinically meaningful profiles such as normal dipping, non-dipping, extreme dipping, morning surge, high variability and sustained high BP.
 - Uses participant metadata such as age group, sex, BMI, caffeine and alcohol intake.
 - Runs baseline Kaggle ABPM classification models for circadian rhythm, pulse pressure, BP load and morning surge.
-- Generates CSV outputs, model metrics, figures and a compact Markdown summary.
+- Saves trained model artifacts, cross-validated predictions, confusion matrices, model metrics, figures and a compact Markdown summary.
 
 ## Datasets
 
@@ -75,9 +75,14 @@ Main outputs:
 - `outputs/optional_physiology_coverage.csv`
 - `outputs/kaggle_label_distribution.csv`
 - `outputs/kaggle_model_metrics.csv`
+- `outputs/kaggle_confusion_matrices.csv`
+- `outputs/kaggle_classification_reports.csv`
+- `outputs/kaggle_cv_predictions.csv`
 - `outputs/kaggle_feature_importance.csv`
 - `outputs/analysis_summary.md`
+- `outputs/models/*.joblib`
 - `outputs/figures/`
+  - includes `outputs/figures/confusion_matrices/*.png`
 
 ## Methods in Brief
 
@@ -125,6 +130,15 @@ Targets:
 - `Morning-Surge`
 
 `BP-Variability` is excluded as a target because it is positive for every row in the dataset.
+
+For each target/model pair, the pipeline saves:
+
+- the final fitted model as a `.joblib` file
+- cross-validated predictions and probabilities
+- AUROC, accuracy, balanced accuracy, precision, recall/sensitivity, specificity, F1 and NPV
+- TN, FP, FN and TP counts
+- a classification report
+- a confusion-matrix PNG
 
 ## Tests ✅
 
