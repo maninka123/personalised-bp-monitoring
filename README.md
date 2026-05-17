@@ -125,6 +125,47 @@ python scripts/create_abpm_feature_mapping_figure.py
                 +-----------------------------+
 ```
 
+## How a New Patient Is Handled
+
+For a new patient, the framework plots the 24-hour BP curve, extracts sleep-aware BP features, compares the patient with clinically defined thresholds and reference distributions, and assigns an interpretable BP profile.
+
+Machine learning is used only as a supporting analysis, not as the main decision method.
+
+Example new-patient values:
+
+| Feature | Value |
+|---|---|
+| Awake mean SBP | 140 mmHg |
+| Sleep mean SBP | 138 mmHg |
+| Dipping percentage | 1.4% |
+| Morning surge | 24 mmHg |
+| SBP variability | High |
+
+Example output:
+
+```text
+Profile:
+Non-dipper with morning surge and high variability
+
+Review point:
+Review night BP, sleep quality, adherence, caffeine or stress triggers,
+and medication timing with clinician.
+```
+
+![New patient framework example](docs/figures/new_patient_framework_example.png)
+
+The figure shows three parts:
+
+- line graph: how BP changes over 24 hours
+- profile plot: where the patient lies compared with BP profile regions
+- report card: what the clinician should review next
+
+Regenerate this figure with:
+
+```bash
+python scripts/create_new_patient_framework_figure.py
+```
+
 ## BP Profiles
 
 | Profile | Meaning |
