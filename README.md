@@ -1,33 +1,115 @@
 # Sleep-Aware Blood Pressure Profiling Framework
 
-This repository implements a reproducible BP-first framework for personalised hypertension monitoring.
+This project builds a **sleep-aware blood pressure profiling framework** for personalised hypertension monitoring.
 
-It uses 24-hour ABPM readings with sleep/wake labels to build interpretable circadian BP profiles. The machine-learning models are trained only on the Kaggle ABPM summary dataset.
+It uses two datasets, but they do different jobs:
 
-The output is designed for clinician-review support, not automatic medication advice.
+- **Dryad dataset**: builds the actual sleep-aware BP framework from raw 24-hour ABPM readings.
+- **Kaggle dataset**: trains and evaluates the machine-learning models using ABPM summary features.
 
-## Dataset Use
+Important: the ML models are trained **only on the Kaggle dataset**. Dryad and Kaggle are not merged row-by-row because they are different participant cohorts.
 
-![Dataset usage](docs/figures/dataset_usage.png)
+## Why Two Datasets?
 
-Dryad is the main sleep-aware BP profiling dataset. It is used to clean ABPM readings, split awake/sleep BP, extract participant-level features and detect BP profiles.
+The datasets complement each other:
 
-Kaggle is used only for machine-learning classification. It is not merged with Dryad participants.
+| Dataset | Main role | Why it matters |
+|---|---|---|
+| Dryad 24-hour physiological monitoring | Framework development | Has raw ABPM readings, sleep/wake labels, HR, MAP, PP and participant metadata |
+| Kaggle ABPM summary dataset | ML modelling | Has more rows and ready-made ABPM labels for model training |
 
-## Framework Outputs
+Simple view:
 
-![Framework outputs](docs/figures/framework_outputs.png)
+```text
+Dryad = builds the clinical framework
+Kaggle = tests the machine-learning idea
+```
 
-The pipeline creates:
+More detailed view:
 
-- Dryad participant-level BP profile tables
-- valid cleaned ABPM readings
-- Kaggle model metrics
-- classification reports
-- confusion matrix tables and PNG plots
-- cross-validated model predictions
-- final saved `.joblib` models
-- manuscript-style figures
+```text
+Dryad raw 24-hour ABPM data
+        |
+        v
+Clean invalid BP readings
+        |
+        v
+Separate awake vs sleep BP
+        |
+        v
+Calculate dipping, morning surge and BP variability
+        |
+        v
+Create personalised BP profiles
+        |
+        v
+Clinician-review monitoring recommendation
+```
+
+```text
+Kaggle ABPM summary features
+        |
+        v
+Use existing ABPM-derived features
+        |
+        v
+Train logistic regression and random forest models
+        |
+        v
+Predict abnormal ABPM labels
+        |
+        v
+Save metrics, confusion matrices and model files
+```
+
+So the combined contribution is:
+
+```text
+Dryad explains the 24-hour physiology
+        +
+Kaggle supports the ML classification evidence
+        =
+Sleep-aware BP profiling framework with ML support
+```
+
+## Full Project Flow
+
+```text
+                +-----------------------------+
+                |  Dryad sleep-aware ABPM     |
+                |  raw BP + sleep/wake labels |
+                +-------------+---------------+
+                              |
+                              v
+                +-----------------------------+
+                |  BP feature extraction      |
+                |  dipping, surge, variability|
+                +-------------+---------------+
+                              |
+                              v
+                +-----------------------------+
+                |  Personal BP profiles       |
+                |  monitoring recommendation  |
+                +-----------------------------+
+
+
+                +-----------------------------+
+                |  Kaggle ABPM summary data   |
+                |  features + labels          |
+                +-------------+---------------+
+                              |
+                              v
+                +-----------------------------+
+                |  Machine-learning models    |
+                |  Logistic Reg + RandomForest|
+                +-------------+---------------+
+                              |
+                              v
+                +-----------------------------+
+                |  AUROC, F1, confusion matrix|
+                |  saved .joblib models       |
+                +-----------------------------+
+```
 
 ## BP Profiles
 
@@ -40,7 +122,25 @@ The pipeline creates:
 | Morning surge | SBP rises after waking |
 | Sustained high BP | BP remains high across day and night |
 
-## Output Structure
+## What the Pipeline Produces
+
+```text
+Run script
+   |
+   v
+outputs/
+   |
+   |-- Dryad cleaned BP readings
+   |-- Dryad participant BP profiles
+   |-- Kaggle ML metrics
+   |-- Kaggle confusion matrices
+   |-- Kaggle classification reports
+   |-- Kaggle cross-validated predictions
+   |-- saved ML models
+   |-- generated figures
+```
+
+Main output files:
 
 ```text
 outputs/
@@ -55,17 +155,10 @@ outputs/
 |-- models/
 |   |-- *.joblib
 |-- figures/
-|   |-- figure_1_framework_pipeline.png
-|   |-- figure_2_dipping_categories.png
-|   |-- figure_3_awake_vs_sleep_sbp.png
-|   |-- figure_4_morning_surge_distribution.png
-|   |-- figure_5_example_bp_curves.png
-|   |-- figure_6_kaggle_feature_importance.png
-|   |-- figure_7_clinical_monitoring_pathway.png
 |   |-- confusion_matrices/
 ```
 
-## Datasets
+## Dataset Placement
 
 Datasets are not committed to this repository. Place them beside `sleep_aware_bp_framework.py`:
 
@@ -94,9 +187,11 @@ Run tests:
 python -m unittest -v
 ```
 
-## Models
+## Machine-Learning Models
 
-The Kaggle dataset is used to train:
+The ML section uses only the **Kaggle ABPM dataset**.
+
+Models:
 
 - logistic regression
 - random forest
@@ -108,7 +203,13 @@ Targets:
 - `BP-Load`
 - `Morning-Surge`
 
-For each target/model pair, the pipeline saves metrics, predictions, confusion matrices and a final `.joblib` model.
+For each target/model pair, the pipeline saves:
+
+- model metrics
+- cross-validated predictions
+- confusion matrix values
+- confusion matrix plots
+- final `.joblib` model
 
 ## Clinical Boundary
 
