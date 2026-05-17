@@ -553,18 +553,20 @@ def render_report_assistant(profile: dict[str, Any]) -> None:
 
     if "assistant_transcript" not in st.session_state:
         st.session_state.assistant_transcript = []
+    if "assistant_question" not in st.session_state:
+        st.session_state.assistant_question = ""
 
     st.markdown("#### Quick questions")
     q_cols = st.columns(len(quick_questions()))
-    selected_question = None
     for col, (label, question) in zip(q_cols, quick_questions().items()):
-        if col.button(label, use_container_width=True):
-            selected_question = question
+        if col.button(label, use_container_width=True, key=f"assistant_quick_{label}"):
+            st.session_state.assistant_question = question
+            st.session_state.assistant_pending_question = question
 
     st.markdown("#### Custom question")
-    typed_question = st.text_area(
+    st.text_area(
         "Ask a question about the current report",
-        value=selected_question or "",
+        key="assistant_question",
         placeholder="Example: Why is this patient flagged?",
         height=90,
     )
@@ -575,17 +577,26 @@ def render_report_assistant(profile: dict[str, Any]) -> None:
         "Only the calculated report summary is sent to the model."
     )
 
-    if st.button("Ask about this report", type="primary"):
+    ask_clicked = st.button("Ask about this report", type="primary")
+    if ask_clicked:
+        st.session_state.assistant_pending_question = st.session_state.assistant_question
+
+    pending_question = st.session_state.pop("assistant_pending_question", None)
+    if pending_question is not None:
+        question_to_ask = str(pending_question).strip()
+        if not question_to_ask:
+            st.warning("Type a question first, or choose one of the quick questions.")
+            return
         with st.spinner("Preparing report explanation..."):
             try:
                 response = answer_report_question(
-                    typed_question,
+                    question_to_ask,
                     context,
                     model=DEFAULT_HF_MODEL,
                 )
                 st.session_state.assistant_transcript.append(
                     {
-                        "question": typed_question,
+                        "question": question_to_ask,
                         "answer": response.answer,
                         "source": response.source,
                     }
@@ -598,7 +609,7 @@ def render_report_assistant(profile: dict[str, Any]) -> None:
         for item in reversed(st.session_state.assistant_transcript[-6:]):
             st.markdown(f"**Question:** {item['question']}")
             st.markdown(f"**Answer source:** {item['source']}")
-            st.write(item["answer"])
+            st.markdown(item["answer"])
             st.divider()
 
         transcript_text = _assistant_transcript_text()

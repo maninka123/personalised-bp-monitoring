@@ -123,6 +123,10 @@ function ruleBasedAnswer(question, ctx) {
 }
 
 async function askGemma(question, ctx, token, model) {
+  const cleanQuestion = String(question || "").trim();
+  if (!cleanQuestion) {
+    return "Type a question about the current BP report first.";
+  }
   if (!token) {
     return "Gemma is not configured yet. Save a Hugging Face token with `npm start`, or set HF_TOKEN before starting the app.";
   }
@@ -145,7 +149,7 @@ async function askGemma(question, ctx, token, model) {
             "Current report summary JSON:",
             JSON.stringify(ctx, null, 2),
             "",
-            `User question: ${question}`,
+            `User question: ${cleanQuestion}`,
             "",
             "Answer using only the report summary JSON. Keep it concise and clinically safe."
           ].join("\n")
@@ -220,8 +224,13 @@ async function interactiveMode(args) {
 }
 
 async function printAnswer(question, ctx, model) {
+  const cleanQuestion = String(question || "").trim();
+  if (!cleanQuestion) {
+    console.log("\nType a question about the current BP report first.\n");
+    return;
+  }
   const token = resolveHfToken();
-  const answer = await askGemma(question, ctx, token, model);
+  const answer = await askGemma(cleanQuestion, ctx, token, model);
   console.log(`\n[Hugging Face Gemma 4]\n${answer}\n`);
 }
 
@@ -244,7 +253,11 @@ async function main() {
   }
 
   const ctx = loadContext(args.context);
-  const question = args.question || "Why is this patient flagged?";
+  const question = String(args.question || "Why is this patient flagged?").trim();
+  if (!question) {
+    console.error("Error: Type a question about the current BP report first.");
+    process.exit(1);
+  }
   const token = resolveHfToken(args.token);
   const answer = await askGemma(question, ctx, token, args.model);
   console.log(`\n[Hugging Face Gemma 4]\n${answer}\n`);

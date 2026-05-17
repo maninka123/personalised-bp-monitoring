@@ -1,0 +1,7 @@
+label,positive,negative,positive_rate
+Validity,185,85,0.6851851851851852
+Circadian-Rythm,176,94,0.6518518518518519
+Pulse-Pressure,232,38,0.8592592592592593
+BP-Variability,270,0,1.0
+BP-Load,173,97,0.6407407407407407
+Morning-Surge,37,233,0.137037037037037

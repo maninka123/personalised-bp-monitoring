@@ -1,0 +1,11 @@
+Measure,Result
+Raw sleep-annotated ABPM rows,"1,623"
+Valid rows after zero filtering,"1,090"
+Participants with valid ABPM,30
+Insufficient sleep BP for dipping/surge,"7, 9, 14"
+Normal dippers,17
+Non-dippers,7
+Extreme dippers,3
+High variability,8
+High morning surge,7
+Sustained high BP,1
