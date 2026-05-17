@@ -2,52 +2,34 @@
 
 This repository implements a reproducible BP-first framework for personalised hypertension monitoring.
 
-It uses 24-hour ABPM readings with sleep/wake labels to build interpretable circadian BP profiles, then uses a second ABPM summary dataset for baseline machine-learning classification.
+It uses 24-hour ABPM readings with sleep/wake labels to build interpretable circadian BP profiles. The machine-learning models are trained only on the Kaggle ABPM summary dataset.
 
 The output is designed for clinician-review support, not automatic medication advice.
 
-## Full Framework
+## Dataset Use
 
-```mermaid
-flowchart LR
-    A[24-hour ABPM readings] --> B[Remove invalid zero BP rows]
-    B --> C[Split awake vs sleep readings]
-    C --> D[Extract BP features]
-    D --> E[Detect circadian BP profiles]
-    E --> F[Generate monitoring recommendation]
-```
+![Dataset usage](docs/figures/dataset_usage.png)
 
-## What We Analyse
+Dryad is the main sleep-aware BP profiling dataset. It is used to clean ABPM readings, split awake/sleep BP, extract participant-level features and detect BP profiles.
 
-```mermaid
-flowchart TD
-    D1[Dryad sleep-aware ABPM] --> F1[Participant-level BP feature table]
-    F1 --> P1[Dipping category]
-    F1 --> P2[Morning surge]
-    F1 --> P3[BP variability]
-    F1 --> P4[Sustained high BP]
+Kaggle is used only for machine-learning classification. It is not merged with Dryad participants.
 
-    D2[Kaggle ABPM summary features] --> M1[Logistic regression]
-    D2 --> M2[Random forest]
-    M1 --> R1[Metrics and confusion matrices]
-    M2 --> R1
-    R1 --> S1[Saved .joblib models]
-```
+## Framework Outputs
 
-## BP Profile Logic
+![Framework outputs](docs/figures/framework_outputs.png)
 
-```mermaid
-flowchart LR
-    A[Awake mean SBP] --> C[Dipping percent]
-    B[Sleep mean SBP] --> C
-    C --> D{Profile}
-    D --> E[Normal dipper]
-    D --> F[Non-dipper]
-    D --> G[Reverse dipper]
-    D --> H[Extreme dipper]
-```
+The pipeline creates:
 
-Main detected profiles:
+- Dryad participant-level BP profile tables
+- valid cleaned ABPM readings
+- Kaggle model metrics
+- classification reports
+- confusion matrix tables and PNG plots
+- cross-validated model predictions
+- final saved `.joblib` models
+- manuscript-style figures
+
+## BP Profiles
 
 | Profile | Meaning |
 |---|---|
@@ -58,7 +40,7 @@ Main detected profiles:
 | Morning surge | SBP rises after waking |
 | Sustained high BP | BP remains high across day and night |
 
-## Generated Plots and Outputs
+## Output Structure
 
 ```text
 outputs/
@@ -81,18 +63,6 @@ outputs/
 |   |-- figure_6_kaggle_feature_importance.png
 |   |-- figure_7_clinical_monitoring_pathway.png
 |   |-- confusion_matrices/
-```
-
-Plot flow:
-
-```mermaid
-flowchart LR
-    A[Clean BP data] --> B[Dipping bar plot]
-    A --> C[Awake vs sleep SBP plot]
-    A --> D[Morning surge distribution]
-    A --> E[Example 24-hour BP curves]
-    F[ML models] --> G[Feature importance plot]
-    F --> H[Confusion matrix plots]
 ```
 
 ## Datasets
@@ -138,7 +108,7 @@ Targets:
 - `BP-Load`
 - `Morning-Surge`
 
-For each target/model pair, the pipeline saves metrics, cross-validated predictions, confusion matrices and a final `.joblib` model.
+For each target/model pair, the pipeline saves metrics, predictions, confusion matrices and a final `.joblib` model.
 
 ## Clinical Boundary
 
