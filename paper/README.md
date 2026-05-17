@@ -7,10 +7,12 @@ This folder contains a free-format medical-journal style manuscript draft for th
 ## Files
 
 - `manuscript.md` - main paper draft.
+- `manuscript.docx` - Word version of the manuscript.
 - `figures/` - paper-ready PNG figures.
 - `tables/` - CSV result tables used in the paper.
 - `figure_captions.md` - figure caption list.
 - `scripts/build_paper_assets.py` - rebuilds paper figures/tables from `outputs/`.
+- `scripts/create_word_manuscript.py` - rebuilds the Word manuscript from `manuscript.md`.
 
 ## Rebuild
 
@@ -20,6 +22,7 @@ From the repository root:
 python sleep_aware_bp_framework.py --dryad-dir "..\24-hour physiological monitoring" --kaggle-arff "..\Kaggle dataset\y4dh3b3tfx-1\ABPM-dataset.arff" --output-dir outputs
 python scripts\create_new_patient_framework_figure.py
 python paper\scripts\build_paper_assets.py
+python paper\scripts\create_word_manuscript.py
 ```
 
 ## Clinical Boundary
