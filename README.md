@@ -72,6 +72,20 @@ Kaggle supports the ML classification evidence
 Sleep-aware BP profiling framework with ML support
 ```
 
+## How ABPM Features Map to Kaggle ML
+
+The Kaggle dataset does not contain raw 24-hour BP curves like Dryad. Instead, it contains **ABPM-derived summary features** such as 24-hour BP averages, day/night BP values, night-time descent, coefficient of variation and wake-up BP.
+
+These summary features are used to train the ML models.
+
+![ABPM feature mapping](docs/figures/abpm_feature_mapping.png)
+
+The figure can be regenerated with:
+
+```bash
+python scripts/create_abpm_feature_mapping_figure.py
+```
+
 ## Full Project Flow
 
 ```text
