@@ -26,6 +26,34 @@ PATIENT = {
 }
 
 
+ML_VALIDATION = [
+    {
+        "target": "Circadian-Rythm",
+        "feature": "Dipping / sleep fall",
+        "metrics": "AUROC 0.991\nF1 0.955",
+        "top": "Sys-Night-Des\nDia-Night-Des",
+    },
+    {
+        "target": "Morning-Surge",
+        "feature": "Morning rise",
+        "metrics": "AUROC 0.941\nF1 0.697",
+        "top": "BPS-wakeUp\nBPD-wakeUp",
+    },
+    {
+        "target": "BP-Load",
+        "feature": "24h BP burden",
+        "metrics": "AUROC 0.980\nF1 0.986",
+        "top": "BPS-load-Day\nBPS-Day24",
+    },
+    {
+        "target": "Pulse-Pressure",
+        "feature": "SBP-DBP gap",
+        "metrics": "AUROC 0.732\nF1 0.828",
+        "top": "Pressure-gap\nBP range",
+    },
+]
+
+
 def add_card(ax, x, y, w, h, text, facecolor="#f8fafc", edgecolor="#425466", fontsize=9):
     card = FancyBboxPatch(
         (x, y),
@@ -144,22 +172,54 @@ def plot_report_card(ax):
             f"SBP variability: {PATIENT['variability']}",
         ]
     )
-    add_card(ax, 0.02, 0.62, 0.96, 0.33, feature_text, "#eef4f8", fontsize=9.5)
+    add_card(ax, 0.02, 0.61, 0.96, 0.34, feature_text, "#eef4f8", fontsize=8.4)
 
     profile = textwrap.fill(PATIENT["profile"], width=38)
     profile_text = f"Assigned profile\n\n{profile}"
-    add_card(ax, 0.02, 0.38, 0.96, 0.18, profile_text, "#f7f0df", fontsize=9.7)
+    add_card(ax, 0.02, 0.36, 0.96, 0.20, profile_text, "#f7f0df", fontsize=8.2)
 
     review = textwrap.fill(PATIENT["review"], width=46)
     review_text = f"Review point\n\n{review}"
-    add_card(ax, 0.02, 0.13, 0.96, 0.20, review_text, "#f7e9e7", fontsize=8.9)
+    add_card(ax, 0.02, 0.04, 0.96, 0.26, review_text, "#f7e9e7", fontsize=7.8)
+
+
+def plot_ml_validation(ax):
+    ax.axis("off")
+    ax.set_title("D. ML support validation", loc="left", fontweight="bold", pad=8)
 
     ml_text = (
-        "Decision method\n\n"
-        "Clinical thresholds and reference distributions are the main decision method. "
-        "Machine learning is supporting analysis only."
+        "The patient profile is assigned by transparent clinical rules.\n"
+        "Kaggle ML checks whether similar ABPM feature groups predict related BP labels."
     )
-    add_card(ax, 0.02, -0.08, 0.96, 0.16, textwrap.fill(ml_text, width=50), "#edf2f7", fontsize=8.2)
+    add_card(ax, 0.02, 0.82, 0.96, 0.15, ml_text, "#edf2f7", fontsize=7.8)
+
+    table_rows = [
+        [row["target"], row["feature"], row["metrics"], row["top"]]
+        for row in ML_VALIDATION
+    ]
+    table = ax.table(
+        cellText=table_rows,
+        colLabels=["Target", "Related", "AUROC/F1", "Top signal"],
+        cellLoc="left",
+        colLoc="left",
+        bbox=[0.02, 0.22, 0.96, 0.52],
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(6.2)
+    table.scale(1, 1.25)
+    for (row, col), cell in table.get_celld().items():
+        cell.set_edgecolor("#c9d3d9")
+        if row == 0:
+            cell.set_facecolor("#dcebf2")
+            cell.set_text_props(weight="bold", color="#1f2933")
+        else:
+            cell.set_facecolor("#f8fafc" if row % 2 else "#ffffff")
+
+    note = (
+        "ML does not make the final clinical decision. It supports the framework by "
+        "showing that ABPM-derived feature groups can classify related abnormal BP patterns."
+    )
+    add_card(ax, 0.02, 0.02, 0.96, 0.14, textwrap.fill(note, width=58), "#eef4f8", fontsize=7.5)
 
 
 def main():
@@ -175,16 +235,18 @@ def main():
         }
     )
 
-    fig = plt.figure(figsize=(14, 8.2), constrained_layout=True)
-    grid = GridSpec(2, 3, figure=fig, width_ratios=[1.2, 1.2, 1.05], height_ratios=[1, 1])
+    fig = plt.figure(figsize=(15.2, 8.6), constrained_layout=True)
+    grid = GridSpec(2, 3, figure=fig, width_ratios=[1.2, 1.2, 1.18], height_ratios=[1, 1])
 
     ax_curve = fig.add_subplot(grid[0, 0:2])
     ax_region = fig.add_subplot(grid[1, 0:2])
-    ax_report = fig.add_subplot(grid[:, 2])
+    ax_report = fig.add_subplot(grid[0, 2])
+    ax_ml = fig.add_subplot(grid[1, 2])
 
     plot_bp_curve(ax_curve)
     plot_profile_region(ax_region)
     plot_report_card(ax_report)
+    plot_ml_validation(ax_ml)
 
     fig.suptitle(
         "How the Framework Handles a New Patient",

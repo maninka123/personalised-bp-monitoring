@@ -72,20 +72,6 @@ Kaggle supports the ML classification evidence
 Sleep-aware BP profiling framework with ML support
 ```
 
-## How ABPM Features Map to Kaggle ML
-
-The Kaggle dataset does not contain raw 24-hour BP curves like Dryad. Instead, it contains **ABPM-derived summary features** such as 24-hour BP averages, day/night BP values, night-time descent, coefficient of variation and wake-up BP.
-
-These summary features are used to train the ML models.
-
-![ABPM feature mapping](docs/figures/abpm_feature_mapping.png)
-
-The figure can be regenerated with:
-
-```bash
-python scripts/create_abpm_feature_mapping_figure.py
-```
-
 ## Full Project Flow
 
 ```text
@@ -154,16 +140,40 @@ and medication timing with clinician.
 
 ![New patient framework example](docs/figures/new_patient_framework_example.png)
 
-The figure shows three parts:
+**Figure. Interpretable new-patient BP profiling with ML support validation.**
+
+The new-patient report is generated using rule-based sleep-aware ABPM features, including dipping percentage, morning surge and BP variability. The Kaggle ABPM dataset is used separately to test whether related ABPM feature groups can classify abnormal BP pattern labels. The ML component supports feature relevance but does not replace clinician judgement.
+
+The figure shows four parts:
 
 - line graph: how BP changes over 24 hours
 - profile plot: where the patient lies compared with BP profile regions
 - report card: what the clinician should review next
+- ML support validation: whether similar ABPM feature groups predict related abnormal BP labels in Kaggle
 
 Regenerate this figure with:
 
 ```bash
 python scripts/create_new_patient_framework_figure.py
+```
+
+## ML Support Validation
+
+The new-patient profile is assigned by transparent clinical rules. The Kaggle ML model validates that similar ABPM feature groups have predictive value for related abnormal BP labels.
+
+| Rule-based feature | Kaggle ML target | What ML validates |
+|---|---|---|
+| Sleep BP fall / dipping % | `Circadian-Rythm` | Day-night BP features can identify abnormal rhythm |
+| Morning surge | `Morning-Surge` | Wake-up BP features can identify morning rise |
+| Overall high BP | `BP-Load` | 24h/day/night BP features can identify BP burden |
+| Pulse pressure | `Pulse-Pressure` | Pressure-gap features can classify abnormal pulse pressure |
+| BP variability | Feature group only | Variability helps model interpretation, but is not trained as a target here |
+
+Do not interpret this as the ML model validating the new patient directly. The correct interpretation is:
+
+```text
+ML validates the relevance of ABPM feature groups
+using a separate labelled dataset.
 ```
 
 ## BP Profiles
