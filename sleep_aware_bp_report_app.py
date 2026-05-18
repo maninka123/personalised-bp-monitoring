@@ -100,12 +100,22 @@ GLOBAL_CSS = """
 /* dipping visual */
 .dip-flow { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin: 0.5rem 0; }
 .dip-box {
-    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+    background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px;
     padding: 0.7rem 1rem; text-align: center; min-width: 110px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.06);
 }
-.dip-box .label { font-size: 0.72rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
-.dip-box .val   { font-size: 1.3rem; font-weight: 750; color: #0f172a; margin-top: 0.1rem; }
-.dip-arrow { font-size: 1.3rem; color: #94a3b8; }
+.dip-box .label { font-size: 0.72rem; color: #475569; font-weight: 750; text-transform: uppercase; }
+.dip-box .val   { font-size: 1.3rem; font-weight: 800; color: #020617; margin-top: 0.1rem; }
+.dip-arrow { font-size: 1.3rem; color: #475569; font-weight: 700; }
+.reading-card {
+    background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px;
+    padding: 0.9rem 1rem; margin-top: 0.25rem; box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+    color: #0f172a; line-height: 1.42; font-size: 0.92rem;
+}
+.reading-card p { margin: 0 0 0.48rem 0; }
+.reading-card p:last-child { margin-bottom: 0; }
+.reading-card strong { color: #020617; font-weight: 800; }
+.reading-card .axis-note { color: #475569; font-size: 0.82rem; margin-top: 0.65rem; }
 /* patient summary card */
 .patient-summary-card {
     background: linear-gradient(135deg, #f0f7ff, #f8fafc);
@@ -113,7 +123,7 @@ GLOBAL_CSS = """
     padding: 1.3rem 1.5rem; margin: 1rem 0;
 }
 .patient-summary-card h3 { font-size: 1.05rem; font-weight: 700; margin: 0 0 0.5rem; }
-.patient-summary-card .summary-text { font-size: 0.92rem; color: #475569; line-height: 1.65; }
+.patient-summary-card .summary-text { font-size: 0.92rem; color: #1e293b; line-height: 1.58; }
 /* curve caption */
 .curve-caption {
     font-size: 0.85rem; color: #475569; padding: 0.5rem 0.8rem;
@@ -346,8 +356,8 @@ def render_doctor_dashboard(valid: pd.DataFrame, profile: dict[str, Any]) -> Non
         expected_text = "Expected: should fall by about 10–20%"
         observed_class = 'style="font-weight:600; color:#a16207;"' if is_non_dip else 'style="font-weight:600;"'
         st.markdown(
-            f'<div style="border-left:3px solid #e2e8f0; padding:0.4rem 0.8rem; font-size:0.85rem; color:#64748b;">'
-            f'<div>{expected_text}</div>'
+            f'<div style="border-left:3px solid #cbd5e1; padding:0.4rem 0.8rem; font-size:0.85rem; color:#334155;">'
+            f'<div style="font-weight:500;">{expected_text}</div>'
             f'<div {observed_class}>Observed: {dip_text}</div>'
             f'</div>',
             unsafe_allow_html=True,
@@ -358,18 +368,21 @@ def render_doctor_dashboard(valid: pd.DataFrame, profile: dict[str, Any]) -> Non
         st.pyplot(plot_awake_sleep_bar(profile), clear_figure=True)
 
     # ── 5. Profile position with explanation ──
-    pos_col, explain_col = st.columns([1.2, 0.8])
+    pos_col, explain_col = st.columns([1.35, 0.65], gap="small")
     with pos_col:
         st.markdown("#### 📍 Profile Position")
         st.pyplot(plot_profile_position(profile), clear_figure=True)
     with explain_col:
         st.markdown("#### Reading the chart")
         st.markdown(
-            "**Left side** means BP did not fall enough during sleep.\n\n"
-            "**Higher position** means stronger BP rise after waking.\n\n"
-            f"**This patient:** {label}"
+            '<div class="reading-card">'
+            '<p><strong>Left side:</strong> BP did not fall enough during sleep.</p>'
+            '<p><strong>Higher position:</strong> stronger BP rise after waking.</p>'
+            f'<p><strong>This patient:</strong> {label}</p>'
+            '<p class="axis-note">X-axis = sleep BP drop. Y-axis = morning BP rise.</p>'
+            '</div>',
+            unsafe_allow_html=True,
         )
-        st.caption("X-axis: how much BP drops during sleep.  Y-axis: BP rise after waking.")
 
     # ── 6. Clinical status table (replaces pattern flags) ──
     st.markdown("#### 🩺 Pattern Status")
@@ -435,11 +448,11 @@ def _card_html(label: str, value: str, detail: str, level: str) -> str:
         f'<div style="border:1px solid #e2e8f0; border-left:5px solid {colour};'
         f' border-radius:10px; padding:0.9rem 1rem; background:#ffffff;'
         f' min-height:110px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">'
-        f'<p style="color:#64748b; font-size:0.72rem; font-weight:650;'
+        f'<p style="color:#334155; font-size:0.72rem; font-weight:750;'
         f' text-transform:uppercase; letter-spacing:0.04em; margin:0;">{label}</p>'
-        f'<p style="color:#0f172a; font-size:1.15rem; font-weight:750;'
+        f'<p style="color:#020617; font-size:1.15rem; font-weight:800;'
         f' margin:0.3rem 0 0.1rem; word-break:break-word;">{value}</p>'
-        f'<p style="color:#94a3b8; font-size:0.82rem; margin:0;">{detail}</p>'
+        f'<p style="color:#475569; font-size:0.82rem; font-weight:500; margin:0;">{detail}</p>'
         f"</div>"
     )
 

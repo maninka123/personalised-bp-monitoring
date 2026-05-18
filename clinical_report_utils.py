@@ -386,7 +386,7 @@ def _sleep_segments(valid: pd.DataFrame) -> list[tuple[float, float]]:
 
 
 def plot_profile_position(profile: dict[str, Any]):
-    fig, ax = plt.subplots(figsize=(8.2, 4.6))
+    fig, ax = plt.subplots(figsize=(7.2, 3.7))
     ax.axvspan(-5, 0, color="#f6d6d2", alpha=0.75)
     ax.axvspan(0, 10, color="#f7dfb9", alpha=0.75)
     ax.axvspan(10, 20, color="#dcefe4", alpha=0.85)
@@ -414,6 +414,7 @@ def plot_profile_position(profile: dict[str, Any]):
     ax.set_ylabel("Morning surge (mmHg)")
     ax.set_title("Profile position plot", loc="left", fontweight="bold")
     ax.grid(alpha=0.15)
+    fig.tight_layout(pad=0.8)
     return fig
 
 
