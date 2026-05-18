@@ -243,7 +243,7 @@ Doctor dashboard
 
 The **Ask About This BP Report** tab lets users ask quick or custom questions about the calculated profile. It sends only the report summary to Gemma, not raw ABPM rows, and returns safe explanatory text rather than medication advice.
 
-## Gemma Assistant
+## Google Gemma Assistant ✨
 
 The **Ask About This BP Report** assistant uses Hugging Face Gemma to explain the calculated report summary only. It does not receive raw ABPM rows and does not diagnose, prescribe or recommend medication changes.
 
