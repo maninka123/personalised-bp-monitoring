@@ -1,76 +1,22 @@
 # A Sleep-Aware Blood Pressure Profiling Framework for Personalised Hypertension Monitoring
 
-**Free-format research manuscript draft**
-
-## Authors
-
-Pasindu Maninka and collaborators
-
-## Short Title
-
-Sleep-aware BP profiling from ambulatory monitoring
-
 ## Abstract
 
-**Background.** Hypertension management usually depends on clinic blood pressure (BP), home BP, and treatment review. However, BP is not constant across the day. Night-time BP, insufficient sleep-related BP fall, morning BP surge, and high BP variability can reveal patterns that a single clinic value cannot show. This matters in Sri Lanka and similar health systems because hypertension is common, BP control remains incomplete, and clinician time is limited.
-
-**Objective.** We developed a sleep-aware BP profiling framework that converts 24-hour ambulatory blood pressure monitoring (ABPM) readings into interpretable circadian BP profiles and clinician-review points.
-
-**Methods.** The primary dataset was a 24-hour physiological monitoring dataset with raw ABPM readings, sleep/wake state, systolic BP, diastolic BP, mean arterial pressure, pulse pressure, heart rate, participant information, and data-quality notes. Invalid rows with zero SBP, DBP, MAP, or HR were removed. Participant-level features were calculated: 24-hour mean BP, awake mean BP, sleep mean BP, dipping percentage, morning surge, SBP variability, pulse pressure, MAP, and HR-BP correlation. Profiles were assigned using transparent rules: normal dipper, non-dipper, reverse dipper, extreme dipper, sustained high BP, high variability, and morning surge. A separate Kaggle ABPM `.arff` dataset was used only for supporting machine-learning validation of related ABPM feature groups. Logistic regression and random forest models were trained for `Circadian-Rythm`, `Pulse-Pressure`, `BP-Load`, and `Morning-Surge`.
-
-**Results.** The Dryad physiological dataset contained 1,623 ABPM rows. After zero-value filtering, 1,090 valid readings remained across 30 participants. Three participants had insufficient valid sleep BP readings for dipping and morning-surge analysis. Among 30 participants, 17 were normal dippers, 7 were non-dippers, 3 were extreme dippers, and 3 had insufficient sleep BP data. Eight participants were flagged for high SBP variability, seven for high morning surge, and one for sustained high BP. The Kaggle ABPM dataset contained 270 rows and 39 attributes. Best cross-validated performance was strongest for BP load and circadian rhythm: BP-Load random forest AUROC 0.980, F1 0.986, balanced accuracy 0.976; Circadian-Rythm random forest AUROC 0.991, F1 0.955, balanced accuracy 0.935. Morning-Surge was imbalanced but remained informative with logistic regression AUROC 0.941, F1 0.697, balanced accuracy 0.874.
-
-**Conclusion.** The framework provides a practical, interpretable way to move from raw 24-hour ABPM readings to sleep-aware BP profiles and safe clinician-review points. The new-patient report remains rule-based. Machine learning is used as separate supporting validation, showing that related ABPM feature groups have predictive value for abnormal BP pattern labels.
+Hypertension control depends not only on the average blood pressure (BP), but also on how BP behaves during sleep, waking, and daily activity. This is clinically important in Sri Lanka, where hypertension is common, population ageing and cardiometabolic risk are increasing, and many patients remain undiagnosed, untreated, or uncontrolled. We developed an interpretable sleep-aware BP profiling framework using a 24-hour physiological monitoring dataset as the primary source and a Kaggle ambulatory blood pressure monitoring (ABPM) dataset as a separate machine-learning support dataset. Raw ABPM readings were cleaned, separated into awake and sleep periods, and converted into participant-level features including 24-hour BP, awake BP, sleep BP, dipping percentage, morning surge, variability, pulse pressure, mean arterial pressure, and heart-rate context. Profiles were assigned using transparent clinical rules. After filtering zero-value artefacts, 1,090 valid Dryad ABPM rows remained from 30 participants. Seventeen were normal dippers, seven non-dippers, three extreme dippers, and three had insufficient sleep BP data. Separate Kaggle models showed strong classification performance for BP load and circadian rhythm labels. The final framework generates a clinician-facing report and a Gemma-assisted explanation layer, while keeping treatment decisions rule-based and clinician-led.
 
 ## Keywords
 
-Hypertension; ambulatory blood pressure monitoring; nocturnal hypertension; non-dipping; morning surge; blood pressure variability; Sri Lanka; clinician decision support; interpretable machine learning.
-
-## Plain-Language Summary
-
-Blood pressure changes during the day and night. Some people have BP that stays high during sleep, does not fall enough at night, rises strongly after waking, or changes too much across the day. These patterns may be missed if care looks only at one clinic BP value.
-
-This project builds a simple framework that:
-
-1. reads 24-hour ABPM data,
-2. separates awake and sleep readings,
-3. calculates clinically understandable BP features,
-4. assigns a transparent BP profile, and
-5. gives safe review points for the doctor.
-
-The system does **not** tell patients to change medicine. It says what the clinician should review next.
+Hypertension; ambulatory blood pressure monitoring; nocturnal hypertension; non-dipping; morning surge; blood pressure variability; Sri Lanka; clinician decision support; Gemma; interpretable machine learning.
 
 ## Introduction
 
-Hypertension remains one of the most important modifiable drivers of cardiovascular disease, stroke, kidney disease, and premature death. In Sri Lanka, the problem is not only detection but also sustained control. A nationally representative analysis of Sri Lankan adults reported a weighted hypertension prevalence of 27.6%; among adults with hypertension, only 44.2% were treated and 20.0% were controlled. The same work concluded that the largest cascade losses occur at diagnosis and at control after treatment. The WHO Sri Lanka hypertension profile estimated 4.3 million adults aged 30-79 years living with hypertension in 2019 and noted that 1.5 million more people would need effective treatment to reach a 50% control rate.
+Hypertension is a leading modifiable risk factor for cardiovascular disease, stroke, kidney disease, and premature mortality. In routine practice, however, BP is still often interpreted from clinic measurements or short home BP logs. These values are useful, but they can miss important temporal patterns. A patient may have acceptable clinic BP but elevated sleep BP, reduced nocturnal dipping, an exaggerated morning rise, or unstable BP across the day. Ambulatory blood pressure monitoring (ABPM) is valuable because it measures BP repeatedly during ordinary daily life and sleep, allowing clinicians to assess both BP burden and circadian behaviour.
 
-This creates a practical problem for clinical care: many patients have "poor control", but the reason is not always visible from one clinic BP measurement. BP may be acceptable in clinic but high during sleep, high in the early morning, or unstable across the day. ABPM can measure BP during ordinary daily life and sleep. The 2023 European Society of Hypertension guideline describes ABPM as useful because it captures daily activity and sleep, quantifies BP variability and morning surge, and can assess nocturnal dipping. The guideline also notes that night BP and lack of night-time BP reduction have strong prognostic relevance. The 2017 ACC/AHA framework gives commonly used ABPM review thresholds: 24-hour BP 130/80 mmHg, daytime or awake BP 135/85 mmHg, and night-time or asleep BP 120/70 mmHg.
+This issue is especially relevant in Sri Lanka. The WHO Sri Lanka hypertension profile estimated 4.3 million adults aged 30-79 years living with hypertension in 2019. A nationally representative Sri Lankan analysis reported a weighted adult hypertension prevalence of 27.6%, with major losses across the diagnosis, treatment, and control cascade. Among adults with hypertension, only 44.2% were treated and 20.0% were controlled. These figures show a practical gap: Sri Lanka needs tools that help clinicians identify poorly controlled or unstable BP patterns in a way that is understandable, scalable, and safe.
 
-### Literature Gap
+The clinical literature supports this need. Contemporary European hypertension guidance recognises ABPM as useful for identifying white-coat and masked hypertension, assessing 24-hour BP burden, quantifying BP variability, measuring morning BP surge, and describing nocturnal dipping. Night-time BP and nocturnal hypertension are strongly linked to cardiovascular risk, and recent reviews continue to debate whether absolute nocturnal BP, non-dipping status, or both provide the most clinically useful risk information. Morning BP surge is also biologically plausible because cardiovascular events show morning clustering after waking, although thresholds and definitions vary between studies. These uncertainties argue for transparent reporting rather than automatic treatment decisions.
 
-Current ABPM outputs often remain technical. They may report many numbers but do not always convert them into simple, patient-specific monitoring guidance. In Sri Lanka and other resource-constrained settings, the clinical need is not a black-box model that suggests medication changes. The more realistic need is an interpretable report that shows:
-
-- when BP is high,
-- whether BP falls during sleep,
-- whether BP rises after waking,
-- whether BP is unstable,
-- whether data quality is adequate, and
-- what the clinician should review next.
-
-This study addresses that gap by building a sleep-aware, rule-based BP profiling framework with a separate machine-learning support analysis.
-
-## Study Aim
-
-This study aims to develop a sleep-aware blood pressure profiling framework that identifies circadian BP patterns from ambulatory BP data and supports personalised hypertension monitoring.
-
-## What We Built
-
-The framework has two linked parts:
-
-1. **Clinical framework:** Dryad 24-hour physiological monitoring data are used to build participant-level BP profiles from raw ABPM curves.
-2. **Supporting ML validation:** Kaggle ABPM summary data are used separately to test whether similar ABPM feature groups can classify related abnormal BP labels.
-
-The two datasets are **not merged row by row** because they are different cohorts.
+Despite the clinical value of ABPM, many ABPM reports remain difficult to translate into patient-specific monitoring advice. They may provide averages and raw tables without clearly answering what happened overnight, whether BP rose after waking, or what the doctor should review next. This is the main gap addressed by the present work. We developed a sleep-aware BP profiling framework that converts 24-hour ABPM data into clinically interpretable profiles and safe review points. The framework is designed for doctor-first use, with patient-understandable explanations. Machine learning is used only as a secondary support analysis on a separate labelled dataset, not as the primary decision method.
 
 ![Framework pipeline](figures/fig_1_framework_pipeline.png)
 
@@ -78,223 +24,394 @@ The two datasets are **not merged row by row** because they are different cohort
 
 ## Methods
 
-### Data Sources
+### Study Design
 
-#### Primary Dataset: 24-Hour Physiological Monitoring Dataset
+This was a retrospective computational framework-development study. The work had three linked components. First, a primary sleep-aware ABPM feature-extraction pipeline was built using raw 24-hour physiological monitoring data. Second, the extracted features were converted into rule-based BP phenotypes and clinician-review outputs. Third, a separate labelled Kaggle ABPM dataset was used for machine-learning support validation. The Dryad and Kaggle datasets were deliberately not row-merged because they came from different cohorts and had different structures: Dryad provided raw time-series ABPM data with sleep/wake state, while Kaggle provided labelled ABPM summary features.
 
-The primary dataset included raw ABPM readings and sleep/wake labels. The main files used were:
+The primary clinical question was: can a 24-hour ABPM recording be converted into a simple, interpretable profile showing whether BP is abnormal during sleep, after waking, or across the full day? The secondary validation question was: do ABPM-derived feature groups have predictive value for related abnormal BP labels in an independent labelled dataset?
 
-- `Blood_Pressure_Sleep_Info.xlsx`
-- `Participant_Information.csv`
-- `Data_Collection_Notes.csv`
+### Primary Dataset
 
-The ABPM file contained participant ID, day/date, time, systolic BP, diastolic BP, MAP, pulse pressure, heart rate, and sleep/wake state. Sleep/wake state was coded as:
+The primary dataset was the 24-hour physiological monitoring dataset. Three files were used. `Blood_Pressure_Sleep_Info.xlsx` was the main ABPM file and contained participant ID, date, time, SBP, DBP, MAP, PP, HR, and sleep/wake state. `Participant_Information.csv` provided participant-level demographic and lifestyle context, including sex, age group, BMI, caffeine intake, and alcohol intake. `Data_Collection_Notes.csv` provided data-quality notes, including known device or collection issues.
 
-- `1 = awake`
-- `0 = asleep`
-
-Participant information added age group, sex, BMI, caffeine intake, and alcohol intake. Data collection notes were used to identify known device or collection issues for sensitivity review.
-
-#### Secondary Dataset: Kaggle ABPM Dataset
-
-The Kaggle dataset was an `.arff` file with 270 rows and 39 attributes. It included ABPM-derived summary features and binary labels for:
-
-- `Circadian-Rythm`
-- `Pulse-Pressure`
-- `BP-Load`
-- `Morning-Surge`
-- `BP-Variability`
-
-`BP-Variability` was positive for all 270 rows and was therefore not used as a model target.
-
-![Dataset complementarity](figures/fig_9_dataset_complementarity.png)
-
-**Figure 2.** Dryad and Kaggle are complementary, not row-merged.
-
-### Data Cleaning
-
-For the primary ABPM dataset, rows were removed if any of the following were zero:
-
-- SBP
-- DBP
-- MAP
-- HR
-
-This rule was used because zero values are physiologically invalid and would distort averages, dipping percentage, variability, and morning-surge calculations.
-
-### Feature Extraction
-
-For each participant, the following features were calculated:
-
-| Feature | Meaning |
-|---|---|
-| Valid readings | Number of usable ABPM rows |
-| Awake readings | Number of valid awake rows |
-| Sleep readings | Number of valid sleep rows |
-| 24-hour mean SBP/DBP | Overall BP burden |
-| Awake mean SBP/DBP | Daytime or awake BP load |
-| Sleep mean SBP/DBP | Night-time or sleep BP load |
-| Dipping percentage | Sleep-related SBP fall |
-| Morning surge | Mean SBP in first 2 hours after waking minus mean sleep SBP |
-| SBP/DBP SD and CV | BP variability |
-| Mean PP | Pressure gap |
-| Mean MAP | Average arterial pressure load |
-| Mean HR | Heart-rate context |
-| HR-SBP correlation | Exploratory autonomic or activity-related context |
-
-### Dipping Rule
-
-Dipping percentage was calculated as:
+Sleep/wake state was interpreted as:
 
 ```text
-Dipping % = ((Awake mean SBP - Sleep mean SBP) / Awake mean SBP) x 100
+Wake_Sleep = 1  -> awake
+Wake_Sleep = 0  -> asleep
 ```
 
-The classification rules were:
+All ABPM measurements were first ordered by participant and measurement datetime. Measurement datetime was generated by combining the date column and time column. Participant IDs were standardised as three-character strings, such as `001`, `002`, and `030`, to make merging across files reliable.
 
-| Dipping result | Category |
-|---:|---|
-| 10% to 20% fall | Normal dipper |
-| 0% to <10% fall | Non-dipper |
-| <0% fall | Reverse dipper |
-| >20% fall | Extreme dipper |
-| <3 valid sleep readings | Insufficient sleep BP data |
+### ABPM Data Cleaning
 
-### Morning Surge Rule
+The raw Dryad ABPM table contained 1,623 sleep-annotated rows. The pipeline removed rows with physiologically invalid zero values in SBP, DBP, MAP, or HR. A row was retained only if:
+
+```text
+SBP_i > 0
+DBP_i > 0
+MAP_i > 0
+HR_i  > 0
+```
+
+Equivalently, the valid-row indicator was:
+
+```text
+Valid_i = 1 if (SBP_i > 0 and DBP_i > 0 and MAP_i > 0 and HR_i > 0)
+Valid_i = 0 otherwise
+```
+
+Rows with `Valid_i = 0` were excluded from all feature calculations. This was necessary because zero BP or HR values are not clinically plausible and would bias the participant mean, dipping percentage, morning surge, and variability estimates. After filtering, 1,090 valid readings remained across 30 participants.
+
+For each participant, the valid readings were sorted chronologically. The time from the first valid measurement was calculated as:
+
+```text
+HoursSinceStart_i = (MeasurementTime_i - FirstMeasurementTime) / 3600 seconds
+```
+
+This relative time variable was used for plotting 24-hour curves.
+
+### Participant-Level Feature Extraction
+
+For each participant `p`, the valid readings were separated into three sets:
+
+```text
+All_p   = all valid readings for participant p
+Awake_p = valid readings where Wake_Sleep = 1
+Sleep_p = valid readings where Wake_Sleep = 0
+```
+
+The number of valid readings was calculated as:
+
+```text
+N_all   = count(All_p)
+N_awake = count(Awake_p)
+N_sleep = count(Sleep_p)
+```
+
+Mean 24-hour BP was calculated as:
+
+```text
+Mean24hSBP = sum(SBP_i for i in All_p) / N_all
+Mean24hDBP = sum(DBP_i for i in All_p) / N_all
+```
+
+Awake BP was calculated as:
+
+```text
+AwakeMeanSBP = sum(SBP_i for i in Awake_p) / N_awake
+AwakeMeanDBP = sum(DBP_i for i in Awake_p) / N_awake
+```
+
+Sleep BP was calculated as:
+
+```text
+SleepMeanSBP = sum(SBP_i for i in Sleep_p) / N_sleep
+SleepMeanDBP = sum(DBP_i for i in Sleep_p) / N_sleep
+```
+
+Pulse pressure was either read from the dataset or calculated as:
+
+```text
+PP_i = SBP_i - DBP_i
+MeanPP = sum(PP_i for i in All_p) / N_all
+```
+
+Mean arterial pressure was either read from the dataset or calculated as:
+
+```text
+MAP_i = DBP_i + (SBP_i - DBP_i) / 3
+MeanMAP = sum(MAP_i for i in All_p) / N_all
+```
+
+Mean heart rate was calculated as:
+
+```text
+MeanHR = sum(HR_i for i in All_p) / N_all
+```
+
+BP variability was represented using standard deviation and coefficient of variation. For SBP:
+
+```text
+SBP_SD = sqrt( sum((SBP_i - Mean24hSBP)^2) / (N_all - 1) )
+SBP_CV_percent = (SBP_SD / Mean24hSBP) x 100
+```
+
+The same approach was used for DBP variability. HR-SBP correlation was calculated using Pearson correlation when both HR and SBP had more than one unique value:
+
+```text
+HR_SBP_corr = corr(HR_i, SBP_i)
+```
+
+This was included as exploratory physiological context rather than as a primary clinical endpoint.
+
+### Dipping Percentage and Dipping Phenotype
+
+The central sleep-aware feature was SBP dipping percentage. It was calculated as:
+
+```text
+Dipping_percent = ((AwakeMeanSBP - SleepMeanSBP) / AwakeMeanSBP) x 100
+```
+
+A participant was considered to have sufficient sleep BP data only when:
+
+```text
+N_sleep >= 3
+```
+
+If `N_sleep < 3`, the participant was labelled as `insufficient_sleep` and excluded from dipping and morning-surge interpretation. Otherwise, dipping phenotype was assigned as follows:
+
+| Rule | Category |
+|---|---|
+| `Dipping_percent < 0` | Reverse dipper |
+| `0 <= Dipping_percent < 10` | Non-dipper |
+| `10 <= Dipping_percent <= 20` | Normal dipper |
+| `Dipping_percent > 20` | Extreme dipper |
+| `N_sleep < 3` | Insufficient sleep BP data |
+
+This approach follows the common ABPM convention that a normal nocturnal SBP fall is approximately 10-20%.
+
+### Morning Surge Calculation
+
+Morning surge was calculated only when the participant had at least three valid sleep readings. The first wake time after a sleep period was identified from the sleep/wake sequence. The morning window was defined as the first two hours after this wake transition:
+
+```text
+MorningWindow = readings where:
+  Wake_Sleep = 1
+  WakeTime <= MeasurementTime_i < WakeTime + 2 hours
+```
 
 Morning surge was calculated as:
 
 ```text
-Morning surge = mean SBP in first 2 hours after waking - mean sleep SBP
+MorningSurgeSBP = Mean(SBP_i in MorningWindow) - SleepMeanSBP
 ```
 
-Participants with fewer than 3 valid sleep BP readings were marked as unavailable for morning-surge analysis.
-
-### Sustained High BP Rule
-
-Sustained high BP was flagged when all relevant ABPM thresholds were crossed:
-
-- 24-hour mean BP >= 130/80 mmHg,
-- awake mean BP >= 135/85 mmHg,
-- sleep mean BP >= 120/70 mmHg.
-
-These thresholds follow commonly used ABPM values from ACC/AHA-style and ESH-style guidance.
-
-### High Variability Rule
-
-Because the primary dataset contained only 30 participants, high variability was defined as cohort-relative:
+If no wake transition or no morning-window readings were available, morning surge was marked unavailable. In the Dryad analysis, high morning surge was defined relative to the cohort because the sample was small:
 
 ```text
-High variability = participant SBP SD in the top quartile of the cohort
+HighMorningSurge = 1 if MorningSurgeSBP >= Q75(MorningSurgeSBP among available participants)
 ```
 
-This should be interpreted as a within-cohort signal, not as a universal diagnostic cut-off.
+The resulting top-quartile threshold was 17.76 mmHg.
 
-### Clinical Output
+### Sustained High BP and ABPM Thresholds
 
-The framework produces:
+Sustained high BP was defined using commonly used ABPM thresholds. A participant was flagged as having elevated 24-hour BP if:
 
-- an overall BP profile,
-- a monitoring priority,
-- a 24-hour BP curve,
-- an awake-versus-sleep BP comparison,
-- a dipping-versus-morning-surge profile plot,
-- pattern flags, and
-- doctor review points.
+```text
+Mean24hSBP >= 130 or Mean24hDBP >= 80
+```
 
-Review points are deliberately phrased as clinician-review support, not treatment instructions.
+Awake BP was flagged if:
 
-### Machine-Learning Support Analysis
+```text
+AwakeMeanSBP >= 135 or AwakeMeanDBP >= 85
+```
 
-The Kaggle dataset was used for model validation only. Models were trained for:
+Sleep BP was flagged if sufficient sleep readings were available and:
 
-- `Circadian-Rythm`
-- `Pulse-Pressure`
-- `BP-Load`
-- `Morning-Surge`
+```text
+SleepMeanSBP >= 120 or SleepMeanDBP >= 70
+```
 
-Models:
+Sustained high BP required all three domains to be elevated:
 
-- logistic regression with standard scaling and class balancing,
-- random forest with class balancing.
+```text
+SustainedHighBP = Hypertensive24h and HypertensiveAwake and HypertensiveSleep
+```
 
-Evaluation used 5-fold stratified cross-validation. Reported metrics included:
+If sleep BP was insufficient, sustained high BP was marked unavailable rather than assumed normal.
 
-- AUROC,
-- F1-score,
-- balanced accuracy,
-- precision,
-- sensitivity,
-- specificity,
-- confusion matrix.
+### High Variability Definition
 
-The purpose was to test whether ABPM-derived feature groups can classify related abnormal BP labels. The ML model does **not** classify the new Dryad patient directly and does **not** make clinical decisions.
+High variability was defined using the upper quartile of participant-level SBP standard deviation in the Dryad cohort:
+
+```text
+HighVariability = 1 if SBP_SD >= Q75(SBP_SD)
+```
+
+The resulting threshold was 13.96 mmHg. This was reported as a cohort-relative flag and not as a universal diagnostic cut-off.
+
+### Integration of Participant Metadata and Data-Quality Notes
+
+After feature extraction, participant-level features were merged with metadata by standardised participant ID. Sex, age group, BMI, caffeine intake, and alcohol intake were retained as contextual variables. Data collection notes were converted into a device-quality flag. A known issue was flagged when the issue field was not blank and was not coded as `N` or `No`:
+
+```text
+KnownDeviceIssue = 1 if IssueText not in {'', 'N', 'NO'}
+```
+
+A sensitivity dataset was also created by excluding participants with known device or collection issues. This was used to check whether the framework outputs could be regenerated in a cleaner subset, not to make a separate clinical claim.
+
+### Rule-Based Profile Summary
+
+The final participant profile combined dipping phenotype and additional review flags. The profile summary was constructed by appending present patterns:
+
+```text
+Profile = DippingCategory
+if SustainedHighBP: add 'sustained high BP'
+if HighMorningSurge: add 'morning surge'
+if HighVariability: add 'high variability'
+```
+
+For example:
+
+```text
+Non-dipper with morning surge and high variability
+```
+
+Monitoring priority was assigned using conservative rules. Reverse dipping, sustained high BP, or the combination of high morning surge and high variability produced a high-priority review flag. Non-dipping, high morning surge, high variability, or elevated sleep BP produced a review-soon flag. Insufficient sleep data produced a data-review flag.
+
+### Clinician-Review Recommendations
+
+Each detected pattern was mapped to a safe review point. The wording was intentionally framed as review support rather than treatment advice:
+
+| Detected pattern | Doctor review point |
+|---|---|
+| Insufficient sleep BP data | Review ABPM quality or consider repeat monitoring |
+| Non-dipper | Review night BP and sleep quality |
+| Reverse dipper | Prioritise nocturnal BP pattern review |
+| Morning surge | Review morning BP control and medication timing with clinician |
+| High variability | Check stress, caffeine, pain, missed medication, and measurement quality |
+| Sustained high BP | Consider earlier treatment review |
+| No major rule-based flag | Routine follow-up if clinically appropriate |
+
+The system does not recommend starting, stopping, increasing, decreasing, or switching medication.
+
+### Optional Physiological Data Coverage
+
+The broader physiological dataset also included Zephyr, ECG-segment, and continuous glucose monitoring files. These were not used as primary outcomes. Instead, coverage was quantified to describe future extension potential. For each participant, the pipeline checked whether ABPM exports, CGM files, Zephyr summary files, ECG segment files, and BP-merged ECG segment files were present. This supported the statement that optional physiological context exists but is not yet sufficiently aligned to drive the main clinical claim.
+
+### Kaggle ABPM Machine-Learning Validation
+
+The Kaggle `.arff` file was parsed into a tabular dataframe. Attribute names were read from the ARFF header, and rows were read after the `@data` marker. All columns were converted to numeric values. The labels were:
+
+```text
+Validity
+Circadian-Rythm
+Pulse-Pressure
+BP-Variability
+BP-Load
+Morning-Surge
+```
+
+Label distribution was calculated as:
+
+```text
+PositiveCount_label = sum(y_i = 1)
+NegativeCount_label = N - PositiveCount_label
+PositiveRate_label = PositiveCount_label / N
+```
+
+`BP-Variability` was excluded as a target because all 270 rows were positive, making supervised binary classification impossible. The modelled targets were:
+
+```text
+Circadian-Rythm
+Pulse-Pressure
+BP-Load
+Morning-Surge
+```
+
+All non-label columns were used as input features. The two baseline models were logistic regression and random forest. Logistic regression used standard scaling and class weighting:
+
+```text
+z_ij = (x_ij - mean_j) / SD_j
+logit(P(y_i = 1)) = beta_0 + beta_1 z_i1 + ... + beta_p z_ip
+```
+
+Random forest used 300 trees, minimum leaf size of 2, class balancing, and a fixed random seed. Five-fold stratified cross-validation was used so each fold preserved the target-label distribution as closely as possible:
+
+```text
+For fold k in 1..5:
+  train model on 4 folds
+  predict labels and probabilities on held-out fold
+Combine held-out predictions across all folds
+```
+
+The following metrics were calculated from cross-validated predictions:
+
+```text
+Accuracy = (TP + TN) / (TP + TN + FP + FN)
+Sensitivity = TP / (TP + FN)
+Specificity = TN / (TN + FP)
+Precision = TP / (TP + FP)
+F1 = 2 x (Precision x Sensitivity) / (Precision + Sensitivity)
+BalancedAccuracy = (Sensitivity + Specificity) / 2
+```
+
+AUROC was calculated from the cross-validated predicted probabilities. Confusion matrices were saved for every target-model pair. Feature importance was estimated using the absolute logistic-regression coefficient for logistic regression and Gini-based feature importance for random forest. The top 15 features per model-target pair were saved.
+
+### New-Patient Workflow
+
+For a new patient, the framework expects an ABPM file with at least time, SBP, and DBP. HR, MAP, PP, and sleep/wake labels are used when available. If sleep/wake labels are absent, the prototype can derive sleep state from entered usual sleep and wake times. The analysis then follows the same sequence:
+
+```text
+Upload ABPM file
+  -> clean invalid readings
+  -> assign or read sleep/wake state
+  -> calculate sleep-aware features
+  -> assign rule-based profile
+  -> generate graphs and report table
+  -> provide clinician-review points
+```
+
+The dashboard shows the 24-hour BP curve, awake-versus-sleep BP comparison, dipping-versus-morning-surge profile plot, pattern-status table, data-quality indicators, and patient-friendly explanation.
+
+### Gemma-Assisted Report Explanation
+
+The project includes an `Ask About This BP Report` assistant using Hugging Face-hosted Gemma 4. The assistant is not given raw ABPM rows. Instead, it receives a compact report summary:
+
+```text
+profile
+priority
+mean 24-hour BP
+awake BP
+sleep BP
+dipping percentage
+morning surge
+BP variability flag
+sustained high BP flag
+data quality
+review points
+```
+
+The prompt instructs the model to explain only the provided report summary, avoid diagnosis, avoid prescribing, avoid medication-change advice, and recommend urgent medical care if urgent symptoms are mentioned. Medication-change questions are additionally intercepted by a rule-based guardrail before calling the model. This design keeps the clinical decision rule-based while allowing doctors, nurses, or patients to ask simple explanatory questions about the already generated report.
+
+![Dataset complementarity](figures/fig_9_dataset_complementarity.png)
+
+**Figure 2.** Complementary roles of the Dryad and Kaggle datasets.
 
 ## Results
 
-### Dryad ABPM Data Quality
+The primary Dryad ABPM file contained 1,623 raw sleep-annotated BP rows. After removing invalid zero-value readings, 1,090 valid rows remained across 30 participants. Participants `007`, `009`, and `014` had insufficient valid sleep BP data for dipping and morning-surge analysis. The data notes identified known device or collection issues in eight participants (`006`, `007`, `009`, `014`, `019`, `020`, `022`, and `027`), and these were retained as flags for sensitivity interpretation.
 
-The primary ABPM dataset had 1,623 raw rows. After removing invalid zero SBP/DBP/MAP/HR rows, 1,090 valid rows remained across 30 participants.
-
-Participants `007`, `009`, and `014` had insufficient valid sleep BP readings for dipping and morning-surge analysis. Eight participants were marked with known device or collection issues in the data notes: `006`, `007`, `009`, `014`, `019`, `020`, `022`, and `027`.
-
-See [Table 1](tables/table_1_dryad_profile_summary.csv) for the summary table.
-
-### Sleep-Aware BP Profiles
-
-Among the 30 participants:
-
-- 17 were normal dippers,
-- 7 were non-dippers,
-- 3 were extreme dippers,
-- 3 had insufficient sleep BP data,
-- 8 were flagged for high SBP variability,
-- 7 were flagged for high morning surge,
-- 1 had sustained high BP.
+Among the 30 participants, 17 were classified as normal dippers, seven as non-dippers, three as extreme dippers, and three as insufficient sleep BP data. No reverse dipper was observed in this cohort after filtering. Eight participants were flagged for high SBP variability, seven for high morning surge, and one for sustained high BP. The high-variability threshold was an SBP standard deviation of 13.96 mmHg, corresponding to the cohort top quartile. The high morning-surge threshold was 17.76 mmHg, also defined as the top quartile of available values.
 
 ![Dipping categories](figures/fig_2_dipping_categories.png)
 
-**Figure 3.** Distribution of Dryad sleep-aware dipping categories.
+**Figure 3.** Rule-based dipping categories in the primary ABPM dataset.
 
-The awake-versus-sleep SBP plot shows how participants separate by day/night BP load. Points above the diagonal suggest higher sleep SBP than awake SBP, while points near the diagonal suggest little sleep-related fall.
+The awake-versus-sleep SBP plot showed how participant profiles differ beyond a single 24-hour average. Some participants had clear sleep-related BP reduction, while others had sleep SBP close to awake SBP, consistent with non-dipping behaviour. Threshold lines for awake and sleep SBP provided a clinically intuitive view of BP load.
 
 ![Awake versus sleep SBP](figures/fig_3_awake_vs_sleep_sbp.png)
 
 **Figure 4.** Awake and sleep SBP relationship across participants.
 
-Morning surge was available only when valid sleep data and wake-transition data were adequate. The high morning-surge threshold was the top quartile of available Dryad values, 17.76 mmHg.
+Morning surge varied substantially across participants with adequate sleep data. Because this was a small development dataset, the top-quartile approach was used to flag relatively high surge rather than claiming a universal diagnostic threshold.
 
 ![Morning surge](figures/fig_4_morning_surge_distribution.png)
 
-**Figure 5.** Morning surge distribution in the primary dataset.
+**Figure 5.** Distribution of morning surge in the primary dataset.
 
-### Example 24-Hour Curves
-
-The ABPM curves show why raw 24-hour data are more informative than a single clinic reading. Different patients can have similar overall averages but different sleep and morning patterns.
+Example 24-hour BP curves demonstrated the clinical purpose of the framework. A raw ABPM curve can show whether BP remains high during sleep, rises after waking, or fluctuates widely across the day. These visual patterns are easier for clinicians and patients to understand than a table of isolated measurements.
 
 ![Example BP curves](figures/fig_5_example_bp_curves.png)
 
-**Figure 6.** Example SBP curves for different rule-based BP profiles.
+**Figure 6.** Example sleep-aware BP curves.
 
-### Optional Physiological Context
+Optional physiological streams were available but were not treated as primary outcomes. ABPM exports and Zephyr summaries were present for 30 participants, CGM files for 23 participants, ECG segment files for 29 participants, and BP-merged ECG segment files for 18 participants. These streams support future physiological extensions but were not used to make the main BP claims.
 
-The larger physiological dataset can support future multi-signal work, but it should not become the main claim of this paper because coverage and alignment are uneven.
-
-Coverage:
-
-- ABPM exports: 30 participants,
-- Zephyr summaries: 30 participants,
-- CGM files: 23 participants,
-- ECG segment files: 29 participants,
-- BP-merged ECG segment files: 18 participants.
-
-See [Table 4](tables/table_4_optional_physiology_coverage.csv).
-
-### Kaggle ML Validation Results
-
-The Kaggle dataset had 270 rows. Label distributions were imbalanced, especially for `Morning-Surge`, which had 37 positives and 233 negatives. `BP-Variability` had 270 positives and zero negatives, so it was not modelled as a target.
-
-Best model per target:
+In the Kaggle dataset, label distributions were imbalanced. Morning-Surge was positive in 37 of 270 rows (13.7%), while BP-Variability was positive in all rows and was not modelled as a target. Best cross-validated model performance was strongest for BP load and circadian rhythm. Random forest classified BP-Load with AUROC 0.980, F1-score 0.986, and balanced accuracy 0.976. Random forest classified Circadian-Rythm with AUROC 0.991, F1-score 0.955, and balanced accuracy 0.935. Logistic regression performed best for Morning-Surge with AUROC 0.941, F1-score 0.697, and balanced accuracy 0.874. Logistic regression performed best for Pulse-Pressure with AUROC 0.732, F1-score 0.828, and balanced accuracy 0.737.
 
 | Target | Best model | AUROC | F1 | Balanced accuracy |
 |---|---|---:|---:|---:|
@@ -303,190 +420,56 @@ Best model per target:
 | Morning-Surge | Logistic regression | 0.941 | 0.697 | 0.874 |
 | Pulse-Pressure | Logistic regression | 0.732 | 0.828 | 0.737 |
 
-Full metrics are in [Table 2](tables/table_2_kaggle_best_models.csv), and label distributions are in [Table 3](tables/table_3_kaggle_label_distribution.csv).
-
 ![Kaggle feature importance](figures/fig_6_kaggle_feature_importance.png)
 
-**Figure 7.** Kaggle feature importance supports the relevance of ABPM feature groups.
+**Figure 7.** Kaggle feature importance supports the relevance of ABPM-derived feature groups.
 
-![Results dashboard](figures/fig_10_results_dashboard.png)
-
-**Figure 8.** Main Dryad and Kaggle results at a glance.
-
-### New-Patient Example
-
-For a new patient, the framework works like this:
-
-```text
-New patient ABPM file
-        -> sleep/wake separation
-        -> feature calculation
-        -> rule-based profile assignment
-        -> doctor-facing report
-```
-
-Example:
-
-| Feature | Value |
-|---|---:|
-| Awake mean SBP | 140 mmHg |
-| Sleep mean SBP | 138 mmHg |
-| Dipping percentage | 1.4% |
-| Morning surge | 24 mmHg |
-| SBP variability | High |
-
-Report:
-
-```text
-Profile: Non-dipper with morning surge and high variability
-Review point: Review night BP, sleep quality, adherence, caffeine or stress triggers,
-and medication timing with clinician.
-```
+For a new patient, the framework produces a rule-based report rather than a model-generated clinical decision. For example, a patient with awake mean SBP 140 mmHg, sleep mean SBP 138 mmHg, dipping percentage 1.4%, morning surge 24 mmHg, and high SBP variability would be reported as "non-dipper with morning surge and high variability." The review point would be to assess night BP, sleep quality, adherence, caffeine or stress triggers, and medication timing with a clinician.
 
 ![New patient workflow](figures/fig_8_new_patient_rule_based_report_with_ml_support.png)
 
-**Figure 9.** Rule-based new-patient interpretation with separate ML support validation.
+**Figure 8.** New-patient rule-based reporting with separate ML support validation.
 
 ## Discussion
 
-### Main Finding
+This study developed and implemented a sleep-aware ABPM profiling framework that converts raw 24-hour BP readings into clinically interpretable patterns. The main contribution is the combination of transparent rule-based patient profiling, visual report generation, and separate machine-learning support validation. The framework does not attempt to replace clinical judgement. Instead, it organises ABPM information into a format that helps clinicians review the timing and pattern of BP control.
 
-This project shows that raw 24-hour ABPM data can be converted into an interpretable sleep-aware BP report. The main clinical value is not the machine-learning model. The main value is the rule-based transformation of ABPM curves into clear patterns:
+The results align with the broader ABPM literature. Existing guidelines and reviews emphasise that out-of-office BP, particularly night-time BP, adds information beyond clinic BP. Nocturnal hypertension and non-dipping are associated with increased cardiovascular risk, although debate remains about which metric is most prognostically robust. This uncertainty supports our decision to report both sleep BP burden and dipping percentage rather than using dipping alone. Similarly, the morning surge literature recognises potential clinical relevance but also highlights variation in definitions and thresholds. Our framework therefore reports morning surge as a review signal, not as a stand-alone treatment trigger.
 
-- Did BP fall during sleep?
-- Was sleep BP high?
-- Was there a strong morning rise?
-- Was BP highly variable?
-- Was BP high across day and night?
-- Is the sleep data good enough to trust the pattern?
+The Sri Lankan relevance is practical. A large proportion of adults with hypertension are not adequately controlled, and health services need tools that can improve interpretation without creating unsafe automation. Sri Lanka has specialist clinics where ABPM may be used for selected patients, but it is unlikely to be available for every patient in primary care. A reasonable first use case is therefore targeted: patients with suspected nocturnal hypertension, poor clinic control, morning BP problems, high variability, resistant hypertension, suspected masked hypertension, or medication-timing questions. In these settings, a structured ABPM report can help a clinician decide what to review next.
 
-### Why This Matters Clinically
+The Kaggle analysis strengthens the framework but should be interpreted carefully. The high performance for BP-Load and Circadian-Rythm suggests that ABPM-derived summary features contain useful information for classifying abnormal BP patterns. The Morning-Surge result is also encouraging despite label imbalance. However, this is not direct validation of the Dryad participants or a new Sri Lankan patient. It is better understood as dataset-level support: similar ABPM feature groups are meaningful in a separate labelled dataset.
 
-A patient with chronic hypertension may look similar in clinic but behave differently across 24 hours. For example:
+The Gemma integration addresses a different but important problem: interpretability at the point of use. A monitoring system can fail clinically if its output is technically correct but difficult to explain. The assistant allows a doctor or patient to ask questions such as "Why is this patient flagged?", "What does non-dipper mean?", or "What should be reviewed next?" Because the assistant receives only the calculated report summary, it supports explanation rather than independent medical analysis. This design reduces unnecessary data sharing and keeps clinical responsibility with the treating clinician. In future deployments, privacy, local governance, audit logging, and institutional approval would still be required before use with identifiable patient data.
 
-- one patient may have high daytime BP but acceptable sleep BP,
-- another may have nocturnal hypertension,
-- another may be a non-dipper,
-- another may have a strong morning surge,
-- another may have unstable readings linked to stress, caffeine, pain, adherence, activity, or measurement quality.
+The study has limitations. The primary dataset included only 30 participants, so cohort-relative thresholds for variability and morning surge should not be treated as universal cut-offs. Several participants had insufficient valid sleep BP readings, reinforcing the importance of data-quality reporting. The Dryad and Kaggle datasets came from different cohorts and cannot be row-merged. The machine-learning component validates feature relevance but not patient-level outcomes. The framework has not yet been prospectively validated in Sri Lankan clinical practice, and it does not test whether reporting these profiles improves BP control, medication adherence, cardiovascular outcomes, or hospital admissions.
 
-These differences matter because they direct different clinician-review questions. This is especially relevant in Sri Lanka, where hypertension control gaps remain substantial and scalable monitoring tools need to be understandable to both clinicians and patients.
-
-### Sri Lanka Relevance
-
-Sri Lanka has a strong public health system, but hypertension control still leaves room for improvement. A practical ABPM reporting tool could help hospital clinics, cardiology units, internal medicine clinics, nephrology clinics, and research teams turn 24-hour monitoring into clearer review pathways.
-
-The intended use is not mass screening. ABPM devices may be limited in routine primary care. The more realistic initial use is:
-
-- tertiary or teaching-hospital hypertension clinics,
-- patients with suspected poor control,
-- suspected nocturnal hypertension,
-- suspected white-coat or masked hypertension,
-- patients with morning symptoms or morning BP rise,
-- patients needing medication-timing review by a clinician,
-- research cohorts evaluating BP control patterns.
-
-### How Dryad and Kaggle Complement Each Other
-
-Dryad is the framework dataset because it contains raw 24-hour curves and sleep/wake labels. It lets us calculate features directly from the patient's time series.
-
-Kaggle is the support-validation dataset because it contains labelled ABPM summary features. It cannot replace Dryad because it does not provide the same raw sleep-aware curve workflow. It supports the project by showing that related ABPM feature groups can classify abnormal BP pattern labels.
-
-The correct interpretation is:
-
-> The new-patient profile is assigned by transparent clinical rules.
-> Separate Kaggle ML analysis supports the relevance of similar ABPM feature groups.
-
-### What the Interface Should Show
-
-The doctor-facing interface should show:
-
-- 24-hour BP curve,
-- sleep period shading,
-- morning period marker,
-- awake and sleep BP averages,
-- dipping status,
-- morning surge,
-- variability flag,
-- sustained high BP flag,
-- review checklist.
-
-The patient-facing interface should use simple language:
-
-```text
-Your blood pressure did not fall enough during sleep.
-Your blood pressure increased after waking.
-Your doctor may review night BP, sleep quality, stress, caffeine, adherence,
-and medication timing.
-```
-
-It should not show AUROC, F1-score, random forest, logistic regression, or feature importance to patients.
-
-### Safety Boundary
-
-The framework does not prescribe, change medication, or adjust dose timing automatically. It supports clinician review. The safest wording is:
-
-```text
-Review medication timing with clinician.
-```
-
-not:
-
-```text
-Change medication timing.
-```
-
-### Expert Validation Plan
-
-This manuscript should not claim expert validation yet unless that review has been completed. A strong next step would be structured review by:
-
-- a consultant cardiologist with ABPM experience,
-- a consultant physician or hypertension specialist,
-- a nephrologist familiar with nocturnal hypertension,
-- a clinical pharmacologist for medication-timing wording,
-- an ABPM nurse or technician for workflow and report usability,
-- a Sri Lankan hospital clinician to assess local feasibility.
-
-After expert review is completed, the manuscript can add wording such as:
-
-> The clinical wording and report pathway were reviewed by an independent consultant physician/cardiologist with experience in hypertension and ambulatory blood pressure monitoring. The review focused on clinical safety, interpretability, and appropriateness for clinician-guided monitoring rather than automated medication adjustment.
-
-Until then, the paper should say:
-
-> Expert clinical validation is planned before prospective clinical use.
-
-## Limitations
-
-1. The primary Dryad dataset is small, with 30 participants.
-2. Participants with limited sleep BP readings reduce confidence in night-time profiles.
-3. High variability and high morning surge were defined using cohort-relative thresholds.
-4. Kaggle and Dryad are different cohorts and cannot be merged row by row.
-5. Kaggle ML validates feature relevance, not individual Dryad patient decisions.
-6. The framework is not yet prospectively validated in Sri Lankan patients.
-7. Clinical outcome prediction, admission reduction, or medication optimisation was not tested.
+Future work should include clinician review of the report wording, usability testing with Sri Lankan doctors and nurses, and prospective evaluation in selected hypertension clinics. Expert review should ideally involve a consultant cardiologist, consultant physician, nephrologist, clinical pharmacologist, and ABPM nurse or technician. Once reviewed, the manuscript can state that the clinical wording and monitoring pathway were independently assessed for safety and interpretability. Until then, the appropriate claim is that expert clinical validation is planned.
 
 ## Conclusion
 
-This study presents a sleep-aware BP profiling framework that converts ambulatory BP readings into interpretable circadian BP profiles. The framework may support personalised hypertension monitoring and clinician-guided review of night BP, morning BP control, BP variability, adherence, sleep quality, caffeine or stress triggers, and medication timing. The clinical workflow remains rule-based and explainable. Machine learning is used only as a secondary support analysis showing that related ABPM feature groups can classify abnormal BP pattern labels in a separate labelled dataset.
+The sleep-aware BP profiling framework converts 24-hour ABPM readings into interpretable circadian BP profiles using transparent clinical rules. In the primary dataset, it identified normal dipping, non-dipping, extreme dipping, high morning surge, high variability, insufficient sleep BP data, and sustained high BP patterns. A separate Kaggle analysis showed that related ABPM feature groups can classify abnormal BP pattern labels, supporting the relevance of the framework without replacing rule-based clinical interpretation. The addition of a Gemma-assisted explanation layer may improve doctor and patient understanding while preserving the safety boundary that medication decisions remain clinician-led. With expert review and prospective validation, this framework could support more personalised hypertension monitoring in Sri Lanka and similar health-system settings.
 
 ## Data and Code Availability
 
-Code, figures, tables, Streamlit dashboard, report assistant, and analysis scripts are available in the GitHub repository:
+The analysis code, dashboard prototype, report assistant, paper figures, tables, and manuscript files are available at:
 
 ```text
 https://github.com/maninka123/personalised-bp-monitoring
 ```
 
-Raw datasets are not committed to git. The pipeline expects the Dryad physiological monitoring dataset and Kaggle ABPM `.arff` file to be stored locally.
+Raw datasets are not committed to the repository. The analysis expects the Dryad physiological monitoring dataset and Kaggle ABPM `.arff` file to be stored locally.
 
 ## Ethics and Clinical Use Statement
 
-This is a retrospective data-analysis and software-prototype project using public or locally stored research datasets. It is not a medical device and is not approved for independent clinical decision-making. Any clinical use would require local governance review, expert validation, prospective testing, and appropriate privacy controls.
+This is a retrospective data-analysis and software-prototype project using public or locally stored research datasets. It is not a medical device and is not approved for independent clinical decision-making. Any clinical use would require local governance review, privacy assessment, expert validation, prospective testing, and appropriate clinical oversight.
 
 ## References
 
-1. European Society of Hypertension. **2023 ESH Guidelines for the management of arterial hypertension.** Journal of Hypertension. ABPM guidance includes 24-hour measurement, BP variability, morning surge, dipping status, and night BP relevance. https://ehrica.org/wp-content/uploads/2024/12/guias-esc-2023-hta.pdf
-2. American College of Cardiology/American Heart Association. **2017 Guideline for High Blood Pressure in Adults.** Common ABPM corresponding thresholds include 24-hour 130/80, daytime 135/85, and night-time 120/70 mmHg. https://www.acc.org/About-ACC/Press-Releases/2017/11/13/15/35/High-blood-pressure-redefined-for-first-time-in-14-years-130-is-the-new-high
-3. World Health Organization. **Sri Lanka Hypertension Profile 2023.** WHO estimated 4.3 million adults aged 30-79 years with hypertension in Sri Lanka in 2019. https://cdn.who.int/media/docs/default-source/country-profiles/hypertension/hypertension-2023/hypertension_lka_2023.pdf
-4. Rannan-Eliya RP, et al. **Hypertension diagnosis, awareness, treatment, and control in Sri Lankan adults: a nationally representative cross-sectional study.** BMC Public Health. Reported weighted hypertension prevalence of 27.6% and control of 20.0% among Sri Lankan adults with hypertension. https://link.springer.com/article/10.1186/s12889-025-22659-7
-5. Project dataset files: `Blood_Pressure_Sleep_Info.xlsx`, `Participant_Information.csv`, `Data_Collection_Notes.csv`, and `ABPM-dataset.arff`, analysed using the scripts in this repository.
+1. World Health Organization. Sri Lanka Hypertension Profile 2023. https://cdn.who.int/media/docs/default-source/country-profiles/hypertension/hypertension-2023/hypertension_lka_2023.pdf
+2. Rannan-Eliya RP, et al. Hypertension diagnosis, awareness, treatment, and control in Sri Lankan adults: a nationally representative cross-sectional study. BMC Public Health. https://link.springer.com/article/10.1186/s12889-025-22659-7
+3. European Society of Hypertension. 2023 ESH Guidelines for the management of arterial hypertension. Journal of Hypertension. https://ehrica.org/wp-content/uploads/2024/12/guias-esc-2023-hta.pdf
+4. American College of Cardiology/American Heart Association. 2017 Guideline for High Blood Pressure in Adults. https://www.acc.org/About-ACC/Press-Releases/2017/11/13/15/35/High-blood-pressure-redefined-for-first-time-in-14-years-130-is-the-new-high
+5. Salles GF, et al. Non-dipping blood pressure or nocturnal hypertension: does one matter more? Current Hypertension Reports. https://pubmed.ncbi.nlm.nih.gov/37955827/
+6. Sheppard JP, et al. Prognostic significance of the morning blood pressure surge in clinical practice: a systematic review. American Journal of Hypertension. https://pmc.ncbi.nlm.nih.gov/articles/PMC4261916/
+7. Project data files analysed by this repository: `Blood_Pressure_Sleep_Info.xlsx`, `Participant_Information.csv`, `Data_Collection_Notes.csv`, and `ABPM-dataset.arff`.
