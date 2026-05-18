@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BP Profile Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<link rel="icon" type="image/png" href="assets/icon.png">
+</head>
+<body>
+
+<!-- ── Sidebar ──────────────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="assets/icon.png" class="brand-icon" alt="BP Monitor" style="width:32px;height:32px;border-radius:6px;">
+    <span class="brand-text">BP Profile Monitor</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <button class="nav-btn active" data-view="dashboard" id="nav-dashboard">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 6a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zm10 0a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-btn" data-view="file-upload" id="nav-file-upload">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+      New Patient (File)
+    </button>
+    <button class="nav-btn" data-view="manual-entry" id="nav-manual-entry">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-2.207 2.207L3 14.172V17h2.828l8.38-8.379-2.829-2.828z"/></svg>
+      New Patient (Manual)
+    </button>
+    <button class="nav-btn" data-view="ask-report" id="nav-ask-report">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a9.1 9.1 0 01-2.347-.306l-3.36 1.12a1 1 0 01-1.265-1.265l1.12-3.36A6.57 6.57 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+      Ask About Report
+    </button>
+    <button class="nav-btn" data-view="settings" id="nav-settings">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.062 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+      Settings
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <p class="version-text">v1.0.0</p>
+    <p class="disclaimer-text">For clinician use only</p>
+  </div>
+</aside>
+
+<!-- ── Main content ─────────────────────────────────────────────── -->
+<main class="content" id="content">
+
+  <!-- Dashboard view -->
+  <section class="view active" id="view-dashboard">
+    <div class="view-header">
+      <h1>Patient Dashboard</h1>
+      <p class="view-subtitle">Analysing example patient data</p>
+    </div>
+    <div id="dashboard-container">
+      <div class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <h3>Loading analysis…</h3>
+        <p>The Python engine is starting up.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- File upload view -->
+  <section class="view" id="view-file-upload">
+    <div class="view-header">
+      <h1>New Patient — Upload File</h1>
+      <p class="view-subtitle">Load a CSV or Excel file with ABPM readings</p>
+    </div>
+    <div class="upload-area" id="upload-area">
+      <div class="upload-box" id="upload-box">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        <h3>Click to choose a file</h3>
+        <p>Accepts CSV, XLSX, or XLS. Minimum columns: Time, Systolic, Diastolic. Optional patient columns load automatically: Patient_ID, Patient_Name, Age, Sex, BMI, ABPM_Date.</p>
+        <div class="upload-actions">
+          <button class="btn btn-primary" id="btn-choose-file">Choose File</button>
+          <button class="btn btn-secondary" id="btn-open-samples" type="button">Open Sample Files</button>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top: 1.2rem;">
+        <div class="form-group">
+          <label for="file-patient-id">Patient ID</label>
+          <input type="text" id="file-patient-id" value="NEW" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="file-sleep-start">Usual sleep time</label>
+          <input type="time" id="file-sleep-start" value="22:00" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="file-sleep-end">Usual wake time</label>
+          <input type="time" id="file-sleep-end" value="07:00" class="form-input">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Manual entry view -->
+  <section class="view" id="view-manual-entry">
+    <div class="view-header">
+      <h1>New Patient — Enter Readings</h1>
+      <p class="view-subtitle">Type in blood pressure readings one by one</p>
+    </div>
+    <div id="manual-entry-container"></div>
+  </section>
+
+  <!-- Ask report view -->
+  <section class="view" id="view-ask-report">
+    <div class="view-header">
+      <h1>Ask About This BP Report</h1>
+      <p class="view-subtitle">Gemma explains the calculated BP profile summary only. Raw ABPM rows are not sent.</p>
+    </div>
+    <div class="assistant-layout">
+      <div class="assistant-card">
+        <div class="assistant-status-row">
+          <div>
+            <h3>Report explanation assistant</h3>
+            <p id="assistant-status-text">Checking Gemma connection...</p>
+          </div>
+          <span class="assistant-model-pill">Hugging Face Gemma 4</span>
+        </div>
+        <div class="assistant-summary-box" id="assistant-summary-box">
+          Analyse a patient first, then ask about the calculated report.
+        </div>
+        <div class="assistant-quick-actions">
+          <button class="quick-question-btn" data-question="What does this BP profile mean?">Explain profile</button>
+          <button class="quick-question-btn" data-question="Why is this patient flagged?">Why flagged?</button>
+          <button class="quick-question-btn" data-question="Explain this result to the patient in simple language.">Explain to patient</button>
+          <button class="quick-question-btn" data-question="What should the doctor review next?">What to review next?</button>
+          <button class="quick-question-btn" data-question="Is the data quality enough to interpret this report?">Data quality</button>
+        </div>
+        <div class="assistant-question-row">
+          <textarea id="assistant-question" class="assistant-question" rows="3" placeholder="Ask about this BP report..."></textarea>
+          <button class="btn btn-primary" id="btn-ask-report">Ask</button>
+        </div>
+        <div class="assistant-answer" id="assistant-answer">
+          <p>Ask a question after loading or analysing a patient report.</p>
+        </div>
+        <div class="assistant-safety-note">
+          This assistant explains the report. It does not diagnose, prescribe, or recommend medication changes.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Settings view -->
+  <section class="view" id="view-settings">
+    <div class="view-header">
+      <h1>Settings</h1>
+      <p class="view-subtitle">Configure thresholds and preferences</p>
+    </div>
+    <div class="settings-card">
+      <h3>Sleep Time Defaults</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="settings-sleep-start">Default sleep time</label>
+          <input type="time" id="settings-sleep-start" value="22:00" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="settings-sleep-end">Default wake time</label>
+          <input type="time" id="settings-sleep-end" value="07:00" class="form-input">
+        </div>
+      </div>
+      <h3 style="margin-top:1.5rem;">About</h3>
+      <p style="color:#64748b;">BP Profile Monitor v1.0.0<br>
+         Sleep-aware ambulatory blood pressure analysis.<br>
+         For clinician review only — does not recommend medication changes.</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- Toast notification container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="js/charts.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/manual-entry.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

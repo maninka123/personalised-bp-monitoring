@@ -1,0 +1,64 @@
+{
+  "name": "bp-profile-monitor",
+  "version": "1.0.0",
+  "description": "Sleep-Aware Blood Pressure Profile Monitor for Clinicians",
+  "main": "main.js",
+  "author": "Sleep-Aware BP Monitor Project",
+  "homepage": "https://github.com/maninka123/personalised-bp-monitoring",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build-python": "node build-python.js",
+    "dist": "npm run build-python && electron-builder",
+    "dist-win": "npm run build-python && electron-builder --win"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.0"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0"
+  },
+  "build": {
+    "appId": "com.bpmonitor.app",
+    "productName": "BP Profile Monitor",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "build/icon.ico",
+      "src/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "python-backend/dist/",
+        "to": "python-backend/",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "sample-patient-inputs/",
+        "to": "Sample Patient Inputs/",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico",
+      "publisherName": "Sleep-Aware BP Monitor Project"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BP Profile Monitor",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
+    }
+  }
+}

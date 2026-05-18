@@ -1,0 +1,11 @@
+Patient_ID,Patient_Name,Age,Sex,BMI,ABPM_Date,Day_Date,Time,Systolic,Diastolic,MAP,PP,HR,Wake_Sleep
+SP010,Sample Patient Limited Sleep Data,70,Male,27.8,2026-05-18,18/05/2026,07:00,152,90,110.7,62,76,1
+SP010,Sample Patient Limited Sleep Data,70,Male,27.8,2026-05-18,18/05/2026,08:00,154,92,112.7,62,78,1
+SP010,Sample Patient Limited Sleep Data,70,Male,27.8,2026-05-18,18/05/2026,09:00,151,89,109.7,62,75,1
+SP010,Sample Patient Limited Sleep Data,70,Male,27.8,2026-05-18,18/05/2026,10:00,149,88,108.3,61,74,1
+SP010,Sample Patient Limited Sleep Data,70,Male,27.8,2026-05-18,18/05/2026,12:00,148,87,107.3,61,73,1
+SP010,Sample Patient Limited Sleep Data,70,Male,27.8,2026-05-18,18/05/2026,14:00,150,88,108.7,62,74,1
+SP010,Sample Patient Limited Sleep Data,70,Male,27.8,2026-05-18,18/05/2026,16:00,151,89,109.7,62,75,1
+SP010,Sample Patient Limited Sleep Data,70,Male,27.8,2026-05-18,18/05/2026,18:00,153,91,111.7,62,77,1
+SP010,Sample Patient Limited Sleep Data,70,Male,27.8,2026-05-18,18/05/2026,20:00,150,88,108.7,62,74,1
+SP010,Sample Patient Limited Sleep Data,70,Male,27.8,2026-05-18,18/05/2026,23:00,142,84,103.3,58,66,0

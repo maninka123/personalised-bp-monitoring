@@ -306,6 +306,18 @@ streamlit run sleep_aware_bp_report_app.py
 python -m unittest -v
 ```
 
+## Desktop App Source
+
+The Windows desktop app source is in `desktop_app/`. It includes the Electron UI, FastAPI backend wrapper, app icon, sample patient inputs, and packaging configuration used for the release installer.
+
+```bash
+cd desktop_app
+npm install
+npm run dist-win
+```
+
+The installer is unsigned, so Windows may still show an unknown-publisher warning. A trusted code-signing certificate is required to remove that warning properly.
+
 ## Clinical Boundary
 
 This is a research and monitoring-support framework. It supports clinician review but should not be used to automatically change antihypertensive medication.
