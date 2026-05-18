@@ -309,3 +309,9 @@ python -m unittest -v
 ## Clinical Boundary
 
 This is a research and monitoring-support framework. It supports clinician review but should not be used to automatically change antihypertensive medication.
+
+---
+
+> "Good monitoring should make complex physiology easier to understand, so care can reach people earlier and more clearly."
+
+This project is written with Sri Lanka in mind, where practical and understandable digital health tools can help clinicians and patients make better use of routine BP monitoring. It was also inspired by thoughtful conversations with a dear friend whose kindness and perspective continue to mean a lot.
