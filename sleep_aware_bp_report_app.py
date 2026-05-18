@@ -52,6 +52,24 @@ GLOBAL_CSS = """
 [data-testid="stSidebar"] .stRadio label,
 [data-testid="stSidebar"] .stDateInput label,
 [data-testid="stSidebar"] .stTimeInput label {color: #94a3b8 !important;}
+[data-testid="stSidebar"] input,
+[data-testid="stSidebar"] textarea,
+[data-testid="stSidebar"] [data-baseweb="select"] > div,
+[data-testid="stSidebar"] [data-baseweb="input"] input {
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+    caret-color: #0f172a !important;
+}
+[data-testid="stSidebar"] input::placeholder,
+[data-testid="stSidebar"] textarea::placeholder {
+    color: #64748b !important;
+    opacity: 1 !important;
+}
+[data-testid="stSidebar"] [data-baseweb="select"] span,
+[data-testid="stSidebar"] [data-baseweb="select"] svg {
+    color: #0f172a !important;
+    fill: #0f172a !important;
+}
 [data-testid="stSidebar"] hr {border-color: #334155 !important;}
 /* patient note */
 .patient-note {
