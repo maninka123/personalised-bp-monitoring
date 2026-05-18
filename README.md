@@ -1,5 +1,7 @@
 # Sleep-Aware Blood Pressure Profiling Framework
 
+![Status: Research](https://img.shields.io/badge/Status-Research-blue) ![Stage: Clinical Prototype](https://img.shields.io/badge/Stage-Clinical_Prototype-brightgreen) ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blueviolet)
+
 What this project does:
 This project converts raw 24-hour Ambulatory Blood Pressure Monitoring (ABPM) data into an interactive, sleep-aware patient profile for doctors.
 
