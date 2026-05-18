@@ -211,10 +211,23 @@ Time, Systolic, Diastolic
 Optional columns:
 
 ```text
+Patient_ID, Patient_Name, Age, Sex, BMI, ABPM_Date,
 Day_Date, MAP, PP, HR, Wake_Sleep
 ```
 
-If `Wake_Sleep` is missing, the app uses the sleep start and wake time entered in the sidebar.
+If patient details are included in the file, the Streamlit and desktop apps load them automatically. If `Wake_Sleep` is missing, the app uses the sleep start and wake time entered in the sidebar.
+
+Sample upload files are included here:
+
+```text
+Sample Patient Inputs/
+|-- TEMPLATE_ABPM_with_patient_details.csv
+|-- sample_01_normal_dipper.csv
+|-- ...
+|-- sample_10_limited_sleep_data.csv
+```
+
+Use the template to see the expected format. The 10 sample patients are fictional and are only for testing the dashboard.
 
 Dashboard flow:
 

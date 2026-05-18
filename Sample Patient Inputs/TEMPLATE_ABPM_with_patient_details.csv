@@ -1,0 +1,5 @@
+Patient_ID,Patient_Name,Age,Sex,BMI,ABPM_Date,Day_Date,Time,Systolic,Diastolic,MAP,PP,HR,Wake_Sleep
+PAT001,Example Patient,55,Female,28.0,2026-05-18,18/05/2026,22:00,132,78,96.0,54,66,0
+PAT001,Example Patient,55,Female,28.0,2026-05-18,18/05/2026,23:00,130,77,94.7,53,64,0
+PAT001,Example Patient,55,Female,28.0,2026-05-18,18/05/2026,07:00,146,88,107.3,58,78,1
+PAT001,Example Patient,55,Female,28.0,2026-05-18,18/05/2026,08:00,150,90,110.0,60,82,1

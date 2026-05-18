@@ -3,8 +3,8 @@ import unittest
 import pandas as pd
 
 from bp_report_assistant import answer_report_question, build_report_context, token_status
-from clinical_report_utils import build_patient_profile, example_patient_abpm
-from sleep_aware_bp_framework import classify_dipping, filter_valid_bp_readings
+from clinical_report_utils import build_patient_profile, example_patient_abpm, extract_patient_details
+from sleep_aware_bp_framework import classify_dipping, filter_valid_bp_readings, parse_measurement_datetime
 
 
 class DippingClassificationTests(unittest.TestCase):
@@ -49,6 +49,15 @@ class DataQualityTests(unittest.TestCase):
         self.assertEqual(len(valid), 1)
         self.assertEqual(valid.iloc[0]["Systolic"], 120)
 
+    def test_hh_mm_time_values_parse_with_dates(self):
+        parsed = parse_measurement_datetime(
+            pd.Series(["18/05/2026", "18/05/2026"]),
+            pd.Series(["07:00", "08:30"]),
+        )
+        self.assertFalse(parsed.isna().any())
+        self.assertEqual(parsed.iloc[0].hour, 7)
+        self.assertEqual(parsed.iloc[1].minute, 30)
+
 
 class ReportAssistantTests(unittest.TestCase):
     def test_report_context_uses_summary_not_raw_rows(self):
@@ -82,6 +91,28 @@ class ReportAssistantTests(unittest.TestCase):
         self.assertIn("Systolic", valid.columns)
         self.assertIn("Diastolic", valid.columns)
         self.assertIn("HR", valid.columns)
+
+    def test_patient_details_are_extracted_from_uploaded_file(self):
+        raw = pd.DataFrame(
+            {
+                "Patient_ID": ["SP001", "SP001"],
+                "Patient_Name": ["Sample Patient", "Sample Patient"],
+                "Age": [55, 55],
+                "Sex": ["Female", "Female"],
+                "BMI": [28.2, 28.2],
+                "ABPM_Date": ["2026-05-18", "2026-05-18"],
+                "Time": ["07:00", "08:00"],
+                "Systolic": [140, 142],
+                "Diastolic": [86, 88],
+            }
+        )
+        details = extract_patient_details(raw)
+        self.assertEqual(details["Patient ID"], "SP001")
+        self.assertEqual(details["Patient Name"], "Sample Patient")
+        self.assertEqual(details["Age"], "55")
+        self.assertEqual(details["Sex"], "Female")
+        self.assertEqual(details["BMI"], "28.2")
+        self.assertEqual(details["ABPM date"], "2026-05-18")
 
     def test_token_status_reports_gemma_provider(self):
         status = token_status()

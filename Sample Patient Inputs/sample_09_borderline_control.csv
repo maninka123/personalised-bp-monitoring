@@ -1,0 +1,19 @@
+Patient_ID,Patient_Name,Age,Sex,BMI,ABPM_Date,Day_Date,Time,Systolic,Diastolic,MAP,PP,HR,Wake_Sleep
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,00:00,116,70,85.3,46,56,0
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,01:00,115,69,84.3,46,55,0
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,02:00,114,68,83.3,46,54,0
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,03:00,113,68,83.0,45,54,0
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,04:00,114,68,83.3,46,55,0
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,05:00,116,69,84.7,47,56,0
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,06:00,118,71,86.7,47,58,0
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,07:00,128,80,96.0,48,69,1
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,08:00,129,81,97.0,48,70,1
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,09:00,134,84,100.7,50,73,1
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,10:00,132,82,98.7,50,71,1
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,12:00,131,81,97.7,50,70,1
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,14:00,130,80,96.7,50,69,1
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,16:00,132,81,98.0,51,70,1
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,18:00,133,82,99.0,51,71,1
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,20:00,131,81,97.7,50,69,1
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,22:00,119,72,87.7,47,59,0
+SP009,Sample Patient Borderline,41,Female,23.7,2026-05-18,18/05/2026,23:00,117,71,86.3,46,57,0

@@ -92,9 +92,16 @@ def time_to_string(value: object) -> str:
     return str(value).strip().split()[0]
 
 
+def time_to_timedelta(value: object) -> pd.Timedelta:
+    text = time_to_string(value)
+    if text.count(":") == 1:
+        text = f"{text}:00"
+    return pd.to_timedelta(text, errors="coerce")
+
+
 def parse_measurement_datetime(day_date: pd.Series, time_of_day: pd.Series) -> pd.Series:
     dates = pd.to_datetime(day_date, dayfirst=True, errors="coerce")
-    times = pd.to_timedelta(time_of_day.map(time_to_string), errors="coerce")
+    times = time_of_day.map(time_to_timedelta)
     return dates + times
 
 

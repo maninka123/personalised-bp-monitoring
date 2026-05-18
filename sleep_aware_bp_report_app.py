@@ -18,6 +18,7 @@ from clinical_report_utils import (
     build_patient_profile,
     create_pdf_report,
     example_patient_abpm,
+    extract_patient_details,
     feature_table,
     pattern_flags,
     plot_24h_bp_curve,
@@ -203,6 +204,7 @@ def main() -> None:
 def sidebar_inputs() -> tuple[dict[str, str], pd.DataFrame]:
     st.sidebar.markdown("### 🩺 Patient Details")
     patient_id = st.sidebar.text_input("Patient ID", "EXAMPLE")
+    patient_name = st.sidebar.text_input("Patient Name", "Example Patient")
     age = st.sidebar.text_input("Age", "55")
     sex = st.sidebar.selectbox("Sex", ["Not recorded", "Female", "Male", "Other"], index=1)
     bmi = st.sidebar.text_input("BMI", "28")
@@ -221,38 +223,71 @@ def sidebar_inputs() -> tuple[dict[str, str], pd.DataFrame]:
 
     if source == "Example patient":
         valid = example_patient_abpm()
+        detected_details = {}
     elif source == "Upload ABPM file":
-        uploaded = st.sidebar.file_uploader("ABPM file", type=["csv", "xlsx", "xls"])
+        uploaded = st.sidebar.file_uploader(
+            "ABPM file",
+            type=["csv", "xlsx", "xls"],
+            help=(
+                "Minimum columns: Time, Systolic, Diastolic. Optional patient columns "
+                "Patient_ID, Patient_Name, Age, Sex, BMI and ABPM_Date are loaded automatically."
+            ),
+        )
         if uploaded is None:
             st.info("⬆️ Upload an ABPM file in the sidebar, or switch to *Example patient*.")
             valid = example_patient_abpm()
+            detected_details = {}
         else:
-            valid = _read_uploaded_abpm(uploaded, patient_id, sleep_start, sleep_end)
+            fallback_details = {
+                "Patient ID": patient_id,
+                "Patient Name": patient_name,
+                "Age": age,
+                "Sex": sex,
+                "BMI": bmi,
+                "ABPM date": str(abpm_date),
+            }
+            valid, detected_details = _read_uploaded_abpm(
+                uploaded, fallback_details, sleep_start, sleep_end
+            )
+            detected_display = {key: value for key, value in detected_details.items() if value}
+            if detected_display:
+                st.sidebar.success("Loaded patient details from file.")
     else:
         valid = _manual_entry_sidebar(patient_id, sleep_start, sleep_end)
+        detected_details = {}
 
     patient_details = {
         "Patient ID": patient_id,
+        "Patient Name": patient_name,
         "Age": age,
         "Sex": sex,
         "BMI": bmi,
         "ABPM date": str(abpm_date),
     }
+    patient_details.update({key: value for key, value in detected_details.items() if value})
     return patient_details, valid
 
 
-def _read_uploaded_abpm(uploaded: Any, patient_id: str, sleep_start: Any, sleep_end: Any) -> pd.DataFrame:
+def _read_uploaded_abpm(
+    uploaded: Any,
+    fallback_details: dict[str, str],
+    sleep_start: Any,
+    sleep_end: Any,
+) -> tuple[pd.DataFrame, dict[str, str]]:
     try:
         if uploaded.name.lower().endswith(".csv"):
             raw = pd.read_csv(uploaded)
         else:
             raw = pd.read_excel(uploaded)
-        return prepare_patient_abpm(
+        detected_details = extract_patient_details(raw, fallback_details)
+        patient_id = detected_details.get("Patient ID") or fallback_details.get("Patient ID") or "NEW"
+        valid = prepare_patient_abpm(
             raw,
-            patient_id=patient_id or "NEW",
+            patient_id=patient_id,
             sleep_start=sleep_start.strftime("%H:%M"),
             sleep_end=sleep_end.strftime("%H:%M"),
         )
+        return valid, detected_details
     except Exception as exc:
         st.error(f"Could not analyse uploaded file: {exc}")
         st.stop()

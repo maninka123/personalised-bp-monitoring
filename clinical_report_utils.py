@@ -86,6 +86,49 @@ def _canonical_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df.rename(columns=renamed)
 
 
+def extract_patient_details(
+    df: pd.DataFrame,
+    fallback: dict[str, Any] | None = None,
+) -> dict[str, str]:
+    """Extract repeated patient metadata columns from an uploaded ABPM file."""
+    fallback = fallback or {}
+    aliases = {
+        "Patient ID": ["patient_id", "patient id", "id", "participant_id", "participant id"],
+        "Patient Name": ["patient_name", "patient name", "name", "full_name", "full name"],
+        "Age": ["age", "patient_age", "patient age"],
+        "Sex": ["sex", "gender"],
+        "BMI": ["bmi", "body_mass_index", "body mass index"],
+        "ABPM date": ["abpm_date", "abpm date", "recording_date", "recording date", "study_date", "study date"],
+    }
+    normalized_columns = {_normalize_column_name(column): column for column in df.columns}
+    details: dict[str, str] = {}
+    for output_name, candidates in aliases.items():
+        value = ""
+        for candidate in candidates:
+            column = normalized_columns.get(_normalize_column_name(candidate))
+            if column is None:
+                continue
+            value = _first_non_empty(df[column])
+            if value:
+                break
+        details[output_name] = value or str(fallback.get(output_name, "") or "")
+    return details
+
+
+def _normalize_column_name(value: Any) -> str:
+    return str(value).strip().lower().replace("-", "_").replace(" ", "_")
+
+
+def _first_non_empty(series: pd.Series) -> str:
+    for value in series:
+        if pd.isna(value):
+            continue
+        text = str(value).strip()
+        if text:
+            return text
+    return ""
+
+
 def _parse_time_to_minutes(value: Any) -> float:
     if pd.isna(value):
         return np.nan
@@ -473,6 +516,7 @@ def _pdf_summary_page(pdf: PdfPages, profile: dict[str, Any], details: dict[str,
         "Sleep-Aware BP Profile Report",
         "",
         f"Patient ID: {details.get('Patient ID', '')}",
+        f"Patient name: {details.get('Patient Name', '')}",
         f"Age: {details.get('Age', '')}",
         f"Sex: {details.get('Sex', '')}",
         f"BMI: {details.get('BMI', '')}",

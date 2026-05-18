@@ -1,0 +1,19 @@
+Patient_ID,Patient_Name,Age,Sex,BMI,ABPM_Date,Day_Date,Time,Systolic,Diastolic,MAP,PP,HR,Wake_Sleep
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,00:00,144,86,105.3,58,64,0
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,01:00,145,87,106.3,58,63,0
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,02:00,146,88,107.3,58,62,0
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,03:00,145,87,106.3,58,62,0
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,04:00,144,86,105.3,58,63,0
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,05:00,147,88,107.7,59,65,0
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,06:00,148,89,108.7,59,67,0
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,07:00,152,91,111.3,61,77,1
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,08:00,155,93,113.7,62,79,1
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,09:00,154,92,112.7,62,78,1
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,10:00,153,91,111.7,62,77,1
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,12:00,151,90,110.3,61,75,1
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,14:00,150,89,109.3,61,74,1
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,16:00,152,90,110.7,62,75,1
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,18:00,154,92,112.7,62,77,1
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,20:00,153,91,111.7,62,76,1
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,22:00,146,87,106.7,59,66,0
+SP005,Sample Patient Sustained High BP,67,Female,33.4,2026-05-18,18/05/2026,23:00,145,86,105.7,59,64,0
