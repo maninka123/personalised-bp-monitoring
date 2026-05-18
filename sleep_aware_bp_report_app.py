@@ -71,6 +71,20 @@ GLOBAL_CSS = """
     color: #0f172a !important;
     fill: #0f172a !important;
 }
+[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] *,
+[data-testid="stSidebar"] [data-baseweb="select"] [role="combobox"],
+[data-testid="stSidebar"] [data-baseweb="select"] [aria-selected],
+[data-testid="stSidebar"] [data-baseweb="select"] input,
+[data-testid="stSidebar"] input[readonly] {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    opacity: 1 !important;
+}
+[data-testid="stSidebar"] [data-baseweb="select"] svg,
+[data-testid="stSidebar"] [data-baseweb="select"] svg * {
+    fill: #0f172a !important;
+    color: #0f172a !important;
+}
 [data-testid="stSidebar"] hr {border-color: #334155 !important;}
 /* patient note */
 .patient-note {
