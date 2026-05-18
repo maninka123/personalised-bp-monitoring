@@ -241,195 +241,33 @@ Doctor dashboard
         |-- review points: what the clinician should check next
 ```
 
-Ask-about-report flow:
+The **Ask About This BP Report** tab lets users ask quick or custom questions about the calculated profile. It sends only the report summary to Gemma, not raw ABPM rows, and returns safe explanatory text rather than medication advice.
 
-```text
-Calculated BP report summary
-        |
-        v
-Ask About This BP Report
-        |
-        |-- quick buttons: Explain profile, Why flagged, Explain to patient
-        |-- custom question box
-        |-- Gemma 4 explains the report using the saved Hugging Face token
-        |
-        v
-Safe explanation only, not medication advice
-```
+## Gemma Assistant
 
-The assistant receives only the calculated report summary, for example:
+The **Ask About This BP Report** assistant uses Hugging Face Gemma to explain the calculated report summary only. It does not receive raw ABPM rows and does not diagnose, prescribe or recommend medication changes.
 
-```json
-{
-  "profile": "Non-dipper with morning surge and high variability",
-  "priority": "Review soon",
-  "awake_bp": "140/86",
-  "sleep_bp": "138/82",
-  "dipping_percentage": "1.4%",
-  "morning_surge": "24 mmHg",
-  "bp_variability": "High",
-  "review_points": [
-    "Review night BP and sleep quality",
-    "Review morning BP control",
-    "Check stress, caffeine, adherence and measurement quality"
-  ]
-}
-```
-
-It does **not** send raw ABPM rows to the assistant.
-
-No embedding database is needed here because the assistant answers from one small, structured report summary. This keeps the clinical explanation simple and reduces unnecessary data sharing.
-
-Assistant model:
-
-| Model | How it is used |
-|---|---|
-| Hugging Face Gemma 4 | The only visible assistant model in Streamlit, EXE/CLI and npm |
-
-## Hugging Face Token Setup for Gemma
-
-To use Gemma through Hugging Face, create a Hugging Face access token and use it as `HF_TOKEN`.
-
-Recommended steps:
-
-```text
-1. Create or log in to a Hugging Face account.
-2. Open Settings -> Access Tokens.
-3. Create a token with read/inference access.
-4. Accept the Gemma model terms on the Hugging Face model page if prompted.
-5. Use the token in Streamlit, the EXE/CLI, or the npm app.
-```
-
-### Streamlit
-
-Run the dashboard:
-
-```bash
-streamlit run sleep_aware_bp_report_app.py
-```
-
-Then open **Ask About This BP Report** and ask the question. There is no model selector or API key box in the app.
-
-You can also set the token before starting Streamlit:
-
-```powershell
-$env:HF_TOKEN="hf_your_token_here"
-streamlit run sleep_aware_bp_report_app.py
-```
-
-### Windows EXE / Python CLI
-
-Save the Hugging Face token once:
-
-```powershell
-.\SleepAwareBPReportAssistant-v0.1.0-windows-x64.exe --save-token
-```
-
-Check token status:
-
-```powershell
-.\SleepAwareBPReportAssistant-v0.1.0-windows-x64.exe --token-status
-```
-
-Ask with Gemma:
-
-```powershell
-.\SleepAwareBPReportAssistant-v0.1.0-windows-x64.exe --question "Why is this patient flagged?"
-```
-
-For local Python:
+For Gemma access, set a Hugging Face token once as `HF_TOKEN` or save it through the CLI:
 
 ```bash
 python ask_bp_report.py --save-token
-python ask_bp_report.py --question "Explain this to the patient"
+python ask_bp_report.py --question "Why is this patient flagged?"
 ```
 
-### npm / Node companion app
+In Streamlit, open the **Ask About This BP Report** tab after a patient has been analysed. There is no model selector in the app.
 
-The repo includes a small npm companion app in `npm_app/`.
+## ML Support
 
-Run the npm companion app:
+The patient profile is assigned by transparent clinical rules. ML is used only as separate support evidence on the Kaggle ABPM dataset.
 
-```bash
-cd npm_app
-npm start
-```
-
-`npm start` opens an interactive menu where you can:
-
-```text
-1. Ask quick questions
-2. Ask a custom question
-3. View the report summary JSON sent to the assistant
-4. Save or replace the Hugging Face token
-```
-
-Run one question directly:
-
-```bash
-npm run ask -- --question "Why is this patient flagged?"
-```
-
-Set token for one terminal session:
-
-```powershell
-$env:HF_TOKEN="hf_your_token_here"
-npm run ask -- --question "Explain this to the patient"
-```
-
-Or save the token locally for future npm runs:
-
-```bash
-node src/ask-bp-report.mjs --save-token
-node src/ask-bp-report.mjs --token-status
-node src/ask-bp-report.mjs --question "What should the doctor review next?"
-```
-
-Safety rule:
-
-```text
-The assistant explains the BP report.
-It does not diagnose, prescribe, or recommend medication changes.
-```
-
-Patient report flow:
-
-```text
-Patient report
-        |
-        |-- simple explanation of the BP pattern
-        |-- simplified 24-hour curve
-        |-- safe next steps
-        |-- reminder not to change medication without the doctor
-```
-
-Exported PDF pages:
-
-```text
-Page 1: patient summary and overall profile
-Page 2: BP graphs
-Page 3: feature table
-Page 4: doctor review checklist
-```
-
-## ML Support Validation
-
-The new-patient profile is assigned using clear rule-based BP features. Separate Kaggle ML analysis shows that similar ABPM feature groups can classify related BP pattern labels.
-
-| Rule-based feature | Kaggle ML target | What ML validates |
+| Patient feature | Kaggle ML target | Purpose |
 |---|---|---|
-| Sleep BP fall / dipping % | `Circadian-Rythm` | Day-night BP features can identify abnormal rhythm |
-| Morning surge | `Morning-Surge` | Wake-up BP features can identify morning rise |
-| Overall high BP | `BP-Load` | 24h/day/night BP features can identify BP burden |
-| Pulse pressure | `Pulse-Pressure` | Pressure-gap features can classify abnormal pulse pressure |
-| BP variability | Feature group only | Variability helps model interpretation, but is not trained as a target here |
+| Dipping / sleep BP fall | `Circadian-Rythm` | Tests day-night rhythm feature value |
+| Morning surge | `Morning-Surge` | Tests wake-up BP rise feature value |
+| High BP burden | `BP-Load` | Tests 24h/day/night BP feature value |
+| Pulse pressure | `Pulse-Pressure` | Tests SBP-DBP gap feature value |
 
-Do not interpret this as the ML model validating the new patient directly. The correct interpretation is:
-
-```text
-ML validates the relevance of ABPM feature groups
-using a separate labelled dataset.
-```
+The ML model does **not** validate a new patient directly. It shows that similar ABPM feature groups can classify related BP pattern labels in a separate labelled dataset.
 
 ## BP Profiles
 
@@ -442,49 +280,12 @@ using a separate labelled dataset.
 | Morning surge | SBP rises after waking |
 | Sustained high BP | BP remains high across day and night |
 
-## What the Pipeline Produces
+## Data And Outputs
 
-```text
-Run script
-   |
-   v
-outputs/
-   |
-   |-- Dryad cleaned BP readings
-   |-- Dryad participant BP profiles
-   |-- Kaggle ML metrics
-   |-- Kaggle confusion matrices
-   |-- Kaggle classification reports
-   |-- Kaggle cross-validated predictions
-   |-- saved ML models
-   |-- generated figures
-```
-
-Main output files:
-
-```text
-outputs/
-|-- dryad_participant_features.csv
-|-- dryad_valid_bp_readings.csv
-|-- kaggle_model_metrics.csv
-|-- kaggle_confusion_matrices.csv
-|-- kaggle_classification_reports.csv
-|-- kaggle_cv_predictions.csv
-|-- kaggle_feature_importance.csv
-|-- analysis_summary.md
-|-- models/
-|   |-- *.joblib
-|-- figures/
-|   |-- confusion_matrices/
-```
-
-## Dataset Placement
-
-Datasets are not committed to this repository. Place them beside `sleep_aware_bp_framework.py`:
+Datasets are not committed. Place them like this:
 
 ```text
 personalised-bp-monitoring/
-|-- sleep_aware_bp_framework.py
 |-- 24-hour physiological monitoring/
 |   |-- Blood_Pressure_Sleep_Info.xlsx
 |   |-- Participant_Information.csv
@@ -494,61 +295,17 @@ personalised-bp-monitoring/
 |       |-- ABPM-dataset.arff
 ```
 
+Main generated outputs are saved in `outputs/`, including Dryad participant features, valid BP readings, Kaggle metrics, confusion matrices, feature importance, model files and figures.
+
 ## Run
 
 ```bash
 pip install -r requirements.txt
 python sleep_aware_bp_framework.py
-```
-
-Run the clinical dashboard:
-
-```bash
 streamlit run sleep_aware_bp_report_app.py
-```
-
-Run the EXE-friendly command-line assistant:
-
-```bash
-python ask_bp_report.py
-```
-
-Ask one question directly:
-
-```bash
-python ask_bp_report.py --question "Why is this patient flagged?"
-```
-
-Run tests:
-
-```bash
 python -m unittest -v
 ```
 
-## Machine-Learning Models
-
-The ML section uses only the **Kaggle ABPM dataset**.
-
-Models:
-
-- logistic regression
-- random forest
-
-Targets:
-
-- `Circadian-Rythm`
-- `Pulse-Pressure`
-- `BP-Load`
-- `Morning-Surge`
-
-For each target/model pair, the pipeline saves:
-
-- model metrics
-- cross-validated predictions
-- confusion matrix values
-- confusion matrix plots
-- final `.joblib` model
-
 ## Clinical Boundary
 
-This is a research and monitoring-support framework. It should not be used to automatically change antihypertensive medication.
+This is a research and monitoring-support framework. It supports clinician review but should not be used to automatically change antihypertensive medication.
