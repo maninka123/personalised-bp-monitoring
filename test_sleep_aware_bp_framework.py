@@ -3,7 +3,12 @@ import unittest
 import pandas as pd
 
 from bp_report_assistant import answer_report_question, build_report_context, token_status
-from clinical_report_utils import build_patient_profile, example_patient_abpm, extract_patient_details
+from clinical_report_utils import (
+    build_patient_profile,
+    example_patient_abpm,
+    extract_patient_details,
+    prepare_patient_abpm,
+)
 from sleep_aware_bp_framework import classify_dipping, filter_valid_bp_readings, parse_measurement_datetime
 
 
@@ -58,6 +63,21 @@ class DataQualityTests(unittest.TestCase):
         self.assertEqual(parsed.iloc[0].hour, 7)
         self.assertEqual(parsed.iloc[1].minute, 30)
 
+    def test_uploaded_file_falls_back_when_day_date_is_unparseable(self):
+        raw = pd.DataFrame(
+            {
+                "Day_Date": ["not a date", "not a date", "not a date"],
+                "Time": ["07:00", "08:00", "22:00"],
+                "Systolic": [140, 142, 130],
+                "Diastolic": [86, 88, 78],
+                "HR": [72, 73, 65],
+                "Wake_Sleep": [1, 1, 0],
+            }
+        )
+        valid = prepare_patient_abpm(raw, patient_id="TEST")
+        self.assertEqual(len(valid), 3)
+        self.assertFalse(valid["measurement_datetime"].isna().any())
+
 
 class ReportAssistantTests(unittest.TestCase):
     def test_report_context_uses_summary_not_raw_rows(self):
@@ -84,8 +104,6 @@ class ReportAssistantTests(unittest.TestCase):
                 "Pulse": [72, 73, 68, 67, 66, 67],
             }
         )
-        from clinical_report_utils import prepare_patient_abpm
-
         valid = prepare_patient_abpm(raw)
         self.assertEqual(len(valid), 6)
         self.assertIn("Systolic", valid.columns)

@@ -12,6 +12,19 @@ const API_BASE = `http://127.0.0.1:${API_PORT}`;
 
 // ── Icon path ─────────────────────────────────────────────────────────────
 const ICON_PATH = path.join(__dirname, "build", "icon.ico");
+const DATA_EXTENSIONS = new Set([".csv", ".xlsx", ".xls"]);
+
+function readDataFile(filePath) {
+  if (!filePath || typeof filePath !== "string") {
+    throw new Error("No file path was provided.");
+  }
+  const ext = path.extname(filePath).toLowerCase();
+  if (!DATA_EXTENSIONS.has(ext)) {
+    throw new Error("Please use a CSV, XLSX, or XLS ABPM file.");
+  }
+  const data = fs.readFileSync(filePath);
+  return { name: path.basename(filePath), buffer: data.toString("base64") };
+}
 
 // ── Splash ────────────────────────────────────────────────────────────────
 function createSplashWindow() {
@@ -112,9 +125,11 @@ ipcMain.handle("open-file-dialog", async () => {
     properties: ["openFile"],
   });
   if (result.canceled || !result.filePaths.length) return null;
-  const filePath = result.filePaths[0];
-  const data = fs.readFileSync(filePath);
-  return { name: path.basename(filePath), buffer: data.toString("base64") };
+  return readDataFile(result.filePaths[0]);
+});
+
+ipcMain.handle("read-dropped-file", async (_event, filePath) => {
+  return readDataFile(filePath);
 });
 
 ipcMain.handle("open-sample-inputs", async () => {

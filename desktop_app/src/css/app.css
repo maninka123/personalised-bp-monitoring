@@ -263,6 +263,11 @@ body {
   cursor: pointer;
 }
 .upload-box:hover { border-color: var(--primary); background: #f0f7ff; }
+.upload-box.drag-over {
+  border-color: var(--primary);
+  background: #e0f2fe;
+  box-shadow: 0 0 0 4px rgba(45,140,240,0.12);
+}
 .upload-box h3 { margin: 0.8rem 0 0.3rem; color: var(--text); font-size: 1.05rem; }
 .upload-box p  { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem; }
 .upload-actions {

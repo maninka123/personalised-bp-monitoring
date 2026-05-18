@@ -99,12 +99,16 @@ async function initApp() {
 
   // File upload
   const chooseBtn = document.getElementById("btn-choose-file");
+  const uploadBox = document.getElementById("upload-box");
   if (chooseBtn) {
     chooseBtn.addEventListener("click", handleFileUpload);
-    document.getElementById("upload-box").addEventListener("click", (e) => {
+    uploadBox.addEventListener("click", (e) => {
       if (e.target.closest("button")) return;
       handleFileUpload();
     });
+  }
+  if (uploadBox) {
+    setupFileDrop(uploadBox);
   }
   const samplesBtn = document.getElementById("btn-open-samples");
   if (samplesBtn) {
@@ -350,7 +354,55 @@ async function handleFileUpload() {
   if (!window.api || !window.api.openFileDialog) return;
   const file = await window.api.openFileDialog();
   if (!file) return;
+  await analyseUploadedFile(file);
+}
 
+function setupFileDrop(uploadBox) {
+  ["dragenter", "dragover"].forEach(eventName => {
+    uploadBox.addEventListener(eventName, event => {
+      event.preventDefault();
+      event.stopPropagation();
+      uploadBox.classList.add("drag-over");
+    });
+  });
+
+  ["dragleave", "drop"].forEach(eventName => {
+    uploadBox.addEventListener(eventName, event => {
+      event.preventDefault();
+      event.stopPropagation();
+      uploadBox.classList.remove("drag-over");
+    });
+  });
+
+  uploadBox.addEventListener("drop", async event => {
+    const dropped = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+    if (!dropped) return;
+    try {
+      const file = await fileFromDrop(dropped);
+      await analyseUploadedFile(file);
+    } catch (err) {
+      showToast("Could not read dropped file: " + err.message, "error");
+    }
+  });
+}
+
+async function fileFromDrop(file) {
+  const filePath = window.api && window.api.getPathForFile ? window.api.getPathForFile(file) : "";
+  if (filePath && window.api && window.api.readDroppedFile) {
+    return window.api.readDroppedFile(filePath);
+  }
+  const buffer = await file.arrayBuffer();
+  return { name: file.name, buffer: arrayBufferToBase64(buffer) };
+}
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  bytes.forEach(byte => { binary += String.fromCharCode(byte); });
+  return btoa(binary);
+}
+
+async function analyseUploadedFile(file) {
   const patientId = document.getElementById("file-patient-id").value || "NEW";
   const sleepStart = document.getElementById("file-sleep-start").value || "22:00";
   const sleepEnd = document.getElementById("file-sleep-end").value || "07:00";

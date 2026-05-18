@@ -226,6 +226,11 @@ def prepare_patient_abpm(
 
     if "Day_Date" in prepared.columns:
         prepared["measurement_datetime"] = parse_measurement_datetime(prepared["Day_Date"], prepared["Time"])
+        if prepared["measurement_datetime"].isna().all():
+            prepared["measurement_datetime"] = _fallback_datetimes(prepared["Time"])
+        elif prepared["measurement_datetime"].isna().any():
+            fallback_datetimes = _fallback_datetimes(prepared["Time"])
+            prepared["measurement_datetime"] = prepared["measurement_datetime"].fillna(fallback_datetimes)
     else:
         prepared["measurement_datetime"] = _fallback_datetimes(prepared["Time"])
 
