@@ -14,6 +14,7 @@ outputs/
 build/
 dist/
 *.spec
+release_assets/v*/
 
 # Local environments and editor files.
 .venv/
