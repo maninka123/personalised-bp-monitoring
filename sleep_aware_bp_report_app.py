@@ -116,6 +116,19 @@ GLOBAL_CSS = """
 .reading-card p:last-child { margin-bottom: 0; }
 .reading-card strong { color: #020617; font-weight: 800; }
 .reading-card .axis-note { color: #475569; font-size: 0.82rem; margin-top: 0.65rem; }
+.manual-status {
+    background: #ecfdf5; border: 1px solid #86efac; color: #14532d;
+    border-radius: 10px; padding: 0.65rem 0.75rem; margin: 0.55rem 0;
+    font-size: 0.84rem; line-height: 1.45; font-weight: 600;
+}
+.manual-status.warn {
+    background: #fffbeb; border-color: #fde68a; color: #92400e;
+}
+.manual-last {
+    background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a;
+    border-radius: 10px; padding: 0.6rem 0.7rem; margin: 0.45rem 0;
+    font-size: 0.82rem; line-height: 1.45;
+}
 /* patient summary card */
 .patient-summary-card {
     background: linear-gradient(135deg, #f0f7ff, #f8fafc);
@@ -232,6 +245,8 @@ def _read_uploaded_abpm(uploaded: Any, patient_id: str, sleep_start: Any, sleep_
 def _manual_entry_sidebar(patient_id: str, sleep_start: Any, sleep_end: Any) -> pd.DataFrame:
     if "manual_readings" not in st.session_state:
         st.session_state.manual_readings = []
+    if "manual_entry_message" not in st.session_state:
+        st.session_state.manual_entry_message = ""
 
     st.sidebar.markdown("---")
     st.sidebar.markdown("#### ✏️ Add a Reading")
@@ -245,27 +260,75 @@ def _manual_entry_sidebar(patient_id: str, sleep_start: Any, sleep_end: Any) -> 
         state = st.selectbox("Was the patient…", ["Awake", "Asleep"])
         add_btn = st.form_submit_button("➕ Add Reading")
         if add_btn:
-            st.session_state.manual_readings.append(
-                {
-                    "Time": reading_time.strftime("%H:%M:%S"),
-                    "Systolic": int(systolic),
-                    "Diastolic": int(diastolic),
-                    "HR": int(heart_rate),
-                    "Wake_Sleep": 1 if state == "Awake" else 0,
-                }
+            new_reading = {
+                "Time": reading_time.strftime("%H:%M:%S"),
+                "Systolic": int(systolic),
+                "Diastolic": int(diastolic),
+                "HR": int(heart_rate),
+                "Wake_Sleep": 1 if state == "Awake" else 0,
+            }
+            st.session_state.manual_readings.append(new_reading)
+            st.session_state.manual_entry_message = (
+                f"Added {new_reading['Time']} - {new_reading['Systolic']}/"
+                f"{new_reading['Diastolic']} mmHg, HR {new_reading['HR']} "
+                f"({'Awake' if new_reading['Wake_Sleep'] == 1 else 'Asleep'})."
             )
 
     readings = st.session_state.manual_readings
 
-    if st.sidebar.button("🗑️ Clear all readings"):
-        st.session_state.manual_readings = []
-        readings = []
+    if st.session_state.manual_entry_message:
+        st.sidebar.markdown(
+            f'<div class="manual-status">{st.session_state.manual_entry_message}</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.sidebar.markdown("#### Current manual readings")
+    awake_count = sum(1 for item in readings if item.get("Wake_Sleep") == 1)
+    sleep_count = sum(1 for item in readings if item.get("Wake_Sleep") == 0)
+    status_class = "" if len(readings) >= 6 else " warn"
+    st.sidebar.markdown(
+        f'<div class="manual-status{status_class}">'
+        f'{len(readings)} reading(s) entered. Awake: {awake_count}. Sleep: {sleep_count}.'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    if readings:
+        last = readings[-1]
+        st.sidebar.markdown(
+            '<div class="manual-last">'
+            '<strong>Last added:</strong><br>'
+            f"{last['Time']} - {last['Systolic']}/{last['Diastolic']} mmHg, "
+            f"HR {last['HR']} ({'Awake' if last['Wake_Sleep'] == 1 else 'Asleep'})"
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        preview_df = _manual_readings_preview(readings)
+        st.sidebar.dataframe(preview_df, hide_index=True, use_container_width=True, height=220)
+    else:
+        st.sidebar.caption("No manual readings added yet.")
+
+    action_col_a, action_col_b = st.sidebar.columns(2)
+    if action_col_a.button("↩️ Remove last", disabled=not readings, use_container_width=True):
+        removed = st.session_state.manual_readings.pop()
+        st.session_state.manual_entry_message = (
+            f"Removed last reading: {removed['Time']} - "
+            f"{removed['Systolic']}/{removed['Diastolic']} mmHg."
+        )
         st.rerun()
 
-    if st.sidebar.button("📋 Load example set (18 readings)"):
-        st.session_state.manual_readings = _example_manual_readings()
-        readings = st.session_state.manual_readings
+    if action_col_b.button("🗑️ Clear all", disabled=not readings, use_container_width=True):
+        removed_count = len(st.session_state.manual_readings)
+        st.session_state.manual_readings = []
+        st.session_state.manual_entry_message = f"Cleared {removed_count} manual reading(s)."
         st.rerun()
+
+    if st.sidebar.button("📋 Load example set (18 readings)", use_container_width=True):
+        st.session_state.manual_readings = _example_manual_readings()
+        st.session_state.manual_entry_message = "Loaded 18 example manual readings."
+        st.rerun()
+
+    readings = st.session_state.manual_readings
 
     if len(readings) < 6:
         st.info(
@@ -281,6 +344,21 @@ def _manual_entry_sidebar(patient_id: str, sleep_start: Any, sleep_end: Any) -> 
         sleep_start=sleep_start.strftime("%H:%M"),
         sleep_end=sleep_end.strftime("%H:%M"),
     )
+
+
+def _manual_readings_preview(readings: list[dict]) -> pd.DataFrame:
+    preview = pd.DataFrame(readings).copy()
+    preview.insert(0, "#", range(1, len(preview) + 1))
+    preview["State"] = preview["Wake_Sleep"].map({1: "Awake", 0: "Asleep"})
+    preview = preview.rename(
+        columns={
+            "Time": "Time",
+            "Systolic": "SBP",
+            "Diastolic": "DBP",
+            "HR": "HR",
+        }
+    )
+    return preview[["#", "Time", "SBP", "DBP", "HR", "State"]]
 
 
 def _example_manual_readings() -> list[dict]:
