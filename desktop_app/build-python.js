@@ -50,9 +50,17 @@ if (fs.existsSync(thresholdsPath)) {
   addData.push(`${thresholdsPath}${path.delimiter}outputs`);
 }
 const addDataArgs = addData.map(d => `--add-data "${d}"`).join(" ");
+const hiddenImports = [
+  "clinical_report_utils",
+  "sleep_aware_bp_framework",
+  "bp_report_assistant",
+  "matplotlib.backends.backend_pdf",
+];
+const hiddenImportArgs = hiddenImports.map(name => `--hidden-import ${name}`).join(" ");
+const projectPathArg = `--paths "${PERSONALISED}"`;
 
 execSync(
-  `pyinstaller --onedir --noconfirm --clean --name server --additional-hooks-dir hooks ${addDataArgs} server.py`,
+  `pyinstaller --onedir --noconfirm --clean --name server --additional-hooks-dir hooks ${projectPathArg} ${hiddenImportArgs} ${addDataArgs} server.py`,
   { cwd: BACKEND_DIR, stdio: "inherit" }
 );
 
