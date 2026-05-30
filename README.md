@@ -17,6 +17,26 @@ It has two main parts:
 
 The project is for research and monitoring support. It does **not** replace ABPM, diagnose hypertension by itself, or recommend medication changes.
 
+## Full Pipeline At A Glance
+
+![Personalised blood pressure monitoring pathway](paper/figures/overall%20image.png)
+
+<p align="center">Overall pathway</p>
+
+```text
+Patient BP information
+  -> full 24-hour ABPM when available
+  -> sleep-aware BP profile
+  -> clear personalised report
+  -> clinician-led review
+
+When full ABPM is not yet available
+  -> clinic BP, home BP and patient context
+  -> missing information is accepted
+  -> ABPM-TSL neural risk model
+  -> estimated ABPM risks for prioritising review
+```
+
 ## Why This Matters
 
 Clinic BP alone may miss important patterns:
@@ -28,16 +48,6 @@ Clinic BP alone may miss important patterns:
 - A patient may need ABPM review even if limited clinic readings look acceptable.
 
 The aim is to make these patterns easier for doctors to review and easier for patients to understand.
-
-## Overall Workflow
-
-![Personalised blood pressure monitoring pathway](paper/figures/overall%20image.png)
-
-**Overall pathway.**
-
-![24-hour BP report example](docs/figures/new_patient_framework_example.png)
-
-**24-hour BP report example.**
 
 ## What The App Does
 
@@ -51,6 +61,10 @@ For a full ABPM upload, the app can:
 - create a clinician-facing report
 - generate a PDF report
 - explain the report summary using Gemma
+
+![24-hour BP report example](docs/figures/new_patient_framework_example.png)
+
+<p align="center">24-hour BP report example</p>
 
 For limited-input use, the app can:
 
