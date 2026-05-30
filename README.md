@@ -13,7 +13,7 @@ This project helps turn blood pressure monitoring data into a clearer report for
 It has two main parts:
 
 1. **Full ABPM report:** uses a 24-hour ABPM file to calculate sleep BP, awake BP, dipping pattern, morning surge, BP variability and review points.
-2. **Limited-input risk estimate:** uses a trained ABPM-TSL neural student model to estimate ABPM-related risk patterns from simpler clinic, home, demographic and lifestyle inputs when full ABPM is not immediately available.
+2. **Limited-input risk estimate:** uses a trained ABPM-TSL neural student model to estimate ABPM-related risk patterns from clinic, home, demographic and lifestyle inputs when full ABPM is not immediately available.
 
 The project is for research and monitoring support. It does **not** replace ABPM, diagnose hypertension by itself, or recommend medication changes.
 
@@ -47,7 +47,7 @@ Clinic BP alone may miss important patterns:
 - BP may vary a lot across the day.
 - A patient may need ABPM review even if limited clinic readings look acceptable.
 
-The aim is to make these patterns easier for doctors to review and easier for patients to understand.
+The aim is to support clinical review and patient communication.
 
 ## What The App Does
 
@@ -68,24 +68,24 @@ For a full ABPM upload, the app can:
 
 For limited-input use, the app can:
 
-- accept clinic BP, home BP and simple patient context
+- accept clinic BP, home BP and patient context
 - show which inputs are missing
 - estimate ABPM-related risk probabilities
 - suggest whether ABPM review should be routine, soon, or high priority
 - clearly state that the result is prioritisation support, not a diagnosis
 
-## ABPM-TSL In Plain Language
+## ABPM-TSL Model
 
 ABPM-TSL means **ABPM Teacher-Student Learning**.
 
-The idea is simple:
+Model structure:
 
 ```text
 Teacher model:
 learns from full 24-hour ABPM curves during development
 
 Student model:
-uses easier inputs such as clinic BP, home BP, age, BMI, sleep quality and medical history
+uses routinely collected inputs such as clinic BP, home BP, age, BMI, sleep quality and medical history
 
 Output:
 supports ABPM prioritisation when full ABPM is not yet available
@@ -125,7 +125,7 @@ The trained student model used by the desktop app is:
 ABPM-TSL/models/student_abpm_tsl_torchscript.pt
 ```
 
-In simple terms, the model pathway is:
+Model pathway:
 
 ```text
 Full ABPM data
@@ -137,7 +137,7 @@ Full ABPM data
 
 ## Gemma Report Assistant ✨
 
-The **Ask About This BP Report** assistant uses Gemma to explain the calculated report summary in simpler language.
+The **Ask About This BP Report** assistant uses Gemma to explain the calculated report summary.
 
 It is designed to be safe:
 
