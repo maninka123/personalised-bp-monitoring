@@ -1,159 +1,150 @@
 # Sleep-Aware BP Profiling and ABPM-TSL
 
-![Status: Research](https://img.shields.io/badge/Status-Research-blue) ![Stage: Clinical_Prototype](https://img.shields.io/badge/Stage-Clinical_Prototype-brightgreen) ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blueviolet)
+![Status: Research](https://img.shields.io/badge/Status-Research-blue)
+![Stage: Clinical Prototype](https://img.shields.io/badge/Stage-Clinical_Prototype-brightgreen)
+![Model: ABPM-TSL](https://img.shields.io/badge/Model-ABPM--TSL-orange)
+![Safety: Clinician Led](https://img.shields.io/badge/Safety-Clinician_Led-red)
+![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blueviolet)
 
-**Tags:** hypertension monitoring, ABPM, nocturnal blood pressure, non-dipping, limited-input prediction, teacher-student learning, clinical decision support
+**Tags:** hypertension monitoring, ambulatory blood pressure monitoring, ABPM, nocturnal hypertension, non-dipping, morning surge, blood pressure variability, limited-input risk estimation, teacher-student learning, missingness-aware neural network, Gemma, clinical decision support, digital health, Sri Lanka
 
-This repository builds a research prototype for personalised hypertension monitoring. It has two connected parts:
+This project helps turn blood pressure monitoring data into a clearer report for clinical review.
 
-1. A rule-based sleep-aware ABPM reporting framework that turns full 24-hour BP readings into clinician-readable profiles.
-2. ABPM-TSL, a missingness-aware neural teacher-student model that estimates ABPM-defined risk patterns from limited clinic/home/demographic/lifestyle inputs when full ABPM is not immediately available.
+It has two main parts:
 
-The system supports clinical review and ABPM prioritisation. It does not diagnose hypertension without ABPM and does not recommend medication changes.
+1. **Full ABPM report:** uses a 24-hour ABPM file to calculate sleep BP, awake BP, dipping pattern, morning surge, BP variability and review points.
+2. **Limited-input risk estimate:** uses a trained ABPM-TSL neural student model to estimate ABPM-related risk patterns from simpler clinic, home, demographic and lifestyle inputs when full ABPM is not immediately available.
 
-## Current Scope
+The project is for research and monitoring support. It does **not** replace ABPM, diagnose hypertension by itself, or recommend medication changes.
 
-```text
-Full ABPM recording
-  -> clean readings
-  -> split awake and sleep periods
-  -> compute 24h, awake and sleep BP features
-  -> assign transparent rule-based profile
-  -> clinician-facing report and PDF
+## Why This Matters
 
-Full ABPM sequence during model development
-  -> self-supervised teacher model
-  -> synthetic limited-input cohort
-  -> missingness-aware student model
-  -> Limited-Input Risk tab in desktop app
-```
+Clinic BP alone may miss important patterns:
 
-## Data Sources
+- BP may be high during sleep.
+- BP may not fall normally overnight.
+- BP may rise sharply in the morning.
+- BP may vary a lot across the day.
+- A patient may need ABPM review even if limited clinic readings look acceptable.
 
-| Data source | Role in the current repository | Important boundary |
-|---|---|---|
-| Primary 24-hour physiological monitoring dataset | Full ABPM profiling, rule-derived labels, teacher training, synthetic limited-input generation | Small cohort; not enough for final clinical claims |
-| Synthetic limited-input cohort derived from primary ABPM data | ABPM-TSL student training, ablations, missingness tests | Method-development data, not clinical validation |
-| Labelled ABPM summary dataset, previously called Kaggle/Mendeley support data | Classical baseline and feature-relevance support analysis | Uses ABPM-derived summary inputs, so it is not true no-ABPM deployment validation |
+The aim is to make these patterns easier for doctors to review and easier for patients to understand.
 
-The old README described the machine-learning component mainly as logistic regression and random forest on the labelled ABPM summary dataset. That is no longer the main ML pathway. The current ML work is ABPM-TSL.
+## Overall Workflow
 
-## Rule-Based ABPM Reporting
+![New patient framework example](docs/figures/new_patient_framework_example.png)
 
-The rule-based pipeline reads ABPM rows, removes invalid zero values, separates awake and sleep readings, and calculates:
+**Figure.** The framework takes BP readings, calculates interpretable sleep-aware features, shows the patient profile, and keeps machine-learning support separate from final clinical judgement.
 
-- 24-hour, awake and sleep SBP/DBP
-- dipping percentage and dipping category
-- morning surge
-- BP variability
-- pulse pressure and mean arterial pressure
-- sleep BP data quality
-- clinician-review flags
+## What The App Does
 
-In the primary analysis:
+For a full ABPM upload, the app can:
 
-| Result | Value |
-|---|---:|
-| Raw ABPM rows | 1,623 |
-| Valid rows after zero filtering | 1,090 |
-| Participants with valid ABPM | 30 |
-| Normal dippers | 17 |
-| Non-dippers | 7 |
-| Extreme dippers | 3 |
-| Insufficient sleep BP data | 3 |
+- clean invalid readings
+- separate awake and sleep readings
+- calculate 24-hour, awake and sleep BP
+- classify dipping pattern
+- flag morning surge, high variability and raised sleep BP
+- create a clinician-facing report
+- generate a PDF report
+- explain the report summary using Gemma
 
-The profile is assigned using transparent rules, not a neural model. Example rule-based outputs include normal dipper, non-dipper, reverse dipper, extreme dipper, high morning surge, high variability, raised sleep BP and sustained high BP burden.
+For limited-input use, the app can:
 
-## ABPM-TSL Neural Model
+- accept clinic BP, home BP and simple patient context
+- show which inputs are missing
+- estimate ABPM-related risk probabilities
+- suggest whether ABPM review should be routine, soon, or high priority
+- clearly state that the result is prioritisation support, not a diagnosis
+
+## ABPM-TSL In Plain Language
 
 ABPM-TSL means **ABPM Teacher-Student Learning**.
 
-During training, a teacher model sees the full ABPM sequence:
+The idea is simple:
 
 ```text
-SBP, DBP, HR, sleep/wake state, time features, observation masks
-  -> CNN/GRU/Transformer teacher variants
-  -> masked reconstruction pretraining
-  -> multi-task ABPM phenotype prediction
+Teacher model:
+learns from full 24-hour ABPM curves during development
+
+Student model:
+uses easier inputs such as clinic BP, home BP, age, BMI, sleep quality and medical history
+
+Output:
+supports ABPM prioritisation when full ABPM is not yet available
 ```
 
-The deployed student model sees only limited inputs:
-
-```text
-clinic BP
-morning/evening home BP
-3-day and 7-day home BP summaries
-age, sex, BMI, resting HR
-diabetes, smoking, previous hypertension, medication status
-sleep duration, sleep quality, caffeine, alcohol, stress
-missingness masks for all inputs
-```
-
-The student estimates five ABPM-defined risk probabilities:
+The student model estimates five ABPM-related risk patterns:
 
 - abnormal dipping
 - high morning surge
 - nocturnal hypertension
 - high BP burden
-- high variability
+- high BP variability
 
-It also returns proxy regression targets such as dipping percentage, morning surge, sleep mean SBP, BP burden score and variability score.
+The model is **missingness-aware**, meaning it is designed to handle incomplete forms. For example, it can still run if home BP or lifestyle details are missing, but it lowers confidence and reports what information is absent.
 
-## Current Neural Results
+## Current Model Status
 
-The reproducible neural pipeline is in:
+The current neural model is trained on a synthetic limited-input cohort derived from the available ABPM dataset. It is useful for method development and app testing, but it is **not yet clinical validation**.
+
+Key current result:
+
+| Model | Mean AUROC | Main interpretation |
+|---|---:|---|
+| Full ABPM-TSL | 0.730 | Best current limited-input neural model in the synthetic development experiment |
+
+The strongest targets were high BP burden and nocturnal hypertension. Morning surge was harder to estimate, which is expected because it is a time-specific pattern and limited inputs are less precise than full ABPM.
+
+Full result tables are kept in:
 
 ```text
-ABPM-TSL/scripts/run_abpm_tsl_pipeline.py
+ABPM-TSL/results/
 ```
 
-It generated:
+The trained student model used by the desktop app is:
 
-- 2,400 synthetic limited-input rows
-- 80 synthetic limited-input variants per participant
-- teacher architecture ablations
-- classical limited-input baselines
-- student ablations
-- missingness robustness tests
-- TorchScript student model for the desktop app
+```text
+ABPM-TSL/models/student_abpm_tsl_torchscript.pt
+```
 
-Main held-out results from `ABPM-TSL/results/main_ablation_results.csv`:
+## Important Update About The Older ML Section
 
-| Model | Mean AUROC | Mean AUPRC | Mean F1 | Balanced accuracy |
-|---|---:|---:|---:|---:|
-| Logistic regression | 0.686 | 0.466 | 0.422 | 0.676 |
-| Random forest | 0.646 | 0.413 | 0.246 | 0.592 |
-| HistGradientBoosting | 0.673 | 0.356 | 0.294 | 0.574 |
-| Student MLP only | 0.722 | 0.536 | 0.343 | 0.643 |
-| Student + feature dropout | 0.727 | 0.511 | 0.371 | 0.655 |
-| Student + teacher soft labels | 0.730 | 0.511 | 0.377 | 0.656 |
-| Full ABPM-TSL | 0.730 | 0.511 | 0.377 | 0.656 |
+Earlier versions of this README described the machine-learning work mainly as logistic regression and random forest on the labelled ABPM summary dataset. That is no longer the main model pathway.
 
-Per-target Full ABPM-TSL AUROC:
+The current model pathway is:
 
-| Target | AUROC |
-|---|---:|
-| Abnormal dipping | 0.632 |
-| Morning surge high | 0.517 |
-| Nocturnal hypertension | 0.859 |
-| High BP burden | 0.952 |
-| High variability | 0.688 |
+```text
+Full ABPM data
+  -> rule-derived ABPM labels
+  -> teacher model learns ABPM patterns
+  -> limited-input student model learns to estimate those patterns
+  -> desktop app uses the trained student model when available
+```
 
-Missingness robustness:
+The older labelled ABPM summary dataset is still useful as background support and baseline comparison, but it should not be described as the final or main model.
 
-| Missing rate | Full ABPM-TSL AUROC | Random forest AUROC |
-|---:|---:|---:|
-| 0.0 | 0.730 | 0.623 |
-| 0.1 | 0.730 | 0.614 |
-| 0.3 | 0.704 | 0.583 |
-| 0.5 | 0.692 | 0.578 |
-| 0.7 | 0.646 | 0.549 |
+## Gemma Report Assistant ✨
 
-These results are method-development evidence on a synthetic limited-input cohort derived from ABPM data. They are not clinical validation.
+The **Ask About This BP Report** assistant uses Gemma to explain the calculated report summary in simpler language.
+
+It is designed to be safe:
+
+- it receives the report summary, not raw ABPM rows
+- it explains what the report says
+- it does not diagnose
+- it does not prescribe
+- it does not tell a patient to change medication
+
+Example:
+
+```bash
+python ask_bp_report.py --save-token
+python ask_bp_report.py --question "Why is this patient flagged?"
+```
 
 ## Desktop App
 
-The Windows desktop app source is in:
+The desktop app source is in:
 
 ```text
 desktop_app/
@@ -161,30 +152,13 @@ desktop_app/
 
 It includes:
 
-- Electron desktop UI
+- ABPM upload and report dashboard
+- Limited-Input Risk tab
 - FastAPI backend
-- drag-and-drop ABPM upload
-- patient report dashboard
-- Gemma-assisted report explanation
-- **Limited-Input Risk** tab
-- TorchScript ABPM-TSL student model loading
+- trained TorchScript student model loading
+- sample patient inputs
 
-The limited-input endpoint is:
-
-```text
-POST /api/limited-input-predict
-```
-
-When the trained model files are available, the endpoint uses:
-
-```text
-ABPM-TSL/models/student_abpm_tsl_torchscript.pt
-ABPM-TSL/models/preprocessing.json
-```
-
-If the neural model cannot be loaded, the backend falls back to a transparent rule-like proof-of-concept estimator and reports the fallback reason in `model_status`.
-
-Build the desktop app:
+Build command:
 
 ```bash
 cd desktop_app
@@ -192,97 +166,56 @@ npm install
 npm run dist-win
 ```
 
-The installer is currently unsigned, so Windows may show an unknown-publisher warning.
+The installer is unsigned, so Windows may show an unknown-publisher warning.
 
-## Streamlit Dashboard
+## Streamlit App
 
-Run the Streamlit clinical prototype:
+Run the Streamlit version:
 
 ```bash
 pip install -r requirements.txt
 streamlit run sleep_aware_bp_report_app.py
 ```
 
-Uploaded ABPM files should include at least:
+Uploaded files should include at least:
 
 ```text
 Time, Systolic, Diastolic
 ```
 
-Optional columns:
+Optional useful columns:
 
 ```text
 Patient_ID, Patient_Name, Age, Sex, BMI, ABPM_Date,
 Day_Date, MAP, PP, HR, Wake_Sleep
 ```
 
-Sample fictional input files are in:
+Sample fictional files are in:
 
 ```text
 Sample Patient Inputs/
 desktop_app/sample-patient-inputs/
 ```
 
-## Gemma Report Assistant
-
-The **Ask About This BP Report** assistant explains only the calculated report summary. It does not receive raw ABPM rows and does not diagnose, prescribe or recommend medication changes.
-
-Set a Hugging Face token as `HF_TOKEN`, or save it through the CLI:
-
-```bash
-python ask_bp_report.py --save-token
-python ask_bp_report.py --question "Why is this patient flagged?"
-```
-
-## Repository Layout
+## Project Folders
 
 ```text
-ABPM-TSL/
-  data/                         synthetic limited-input dataset and ABPM sequences
-  figures/                      neural method and result figures
-  models/                       TorchScript student, state dicts and preprocessing metadata
-  results/                      ablation, missingness and per-target result CSVs
-  scripts/run_abpm_tsl_pipeline.py
-
-desktop_app/
-  src/                          Electron frontend
-  python-backend/               FastAPI backend
-  sample-patient-inputs/
-
-paper/
-  manuscript.docx
-  manuscript_updated.docx
-  manuscript.md
-  figures/
-  tables/
-
-outputs/
-  generated rule-based ABPM and old baseline outputs
+ABPM-TSL/          neural teacher-student model, results, figures and model files
+desktop_app/       Electron desktop app and FastAPI backend
+paper/             manuscript files, figures and tables
+outputs/           generated ABPM analysis outputs
+Sample Patient Inputs/  fictional testing files
 ```
 
-Raw datasets are not committed. Place them locally like this:
+Raw datasets are not committed. Keep them locally:
 
 ```text
-personalised-bp-monitoring/
-|-- 24-hour physiological monitoring/
-|   |-- Blood_Pressure_Sleep_Info.xlsx
-|   |-- Participant_Information.csv
-|   |-- Data_Collection_Notes.csv
-|-- Kaggle dataset/
-|   |-- y4dh3b3tfx-1/
-|       |-- ABPM-dataset.arff
+24-hour physiological monitoring/
+Kaggle dataset/
 ```
-
-## Run Checks
-
-```bash
-python -m unittest -v
-python sleep_aware_bp_framework.py
-python ABPM-TSL/scripts/run_abpm_tsl_pipeline.py
-```
-
-The ABPM-TSL pipeline can take longer than the rule-based tests because it trains neural models and writes result artifacts.
 
 ## Clinical Boundary
 
-This is a research and monitoring-support framework. It can help organise ABPM information, explain calculated report summaries, and prioritise ABPM review. It must not be used to automatically start, stop, increase, reduce or time antihypertensive medication. Medication decisions remain clinician-led and require full clinical context.
+This is a research and monitoring-support framework. It can help organise BP information and support ABPM prioritisation, but medication decisions must remain with the treating clinician.
+
+> "Good monitoring should make complex physiology easier to understand, so care can reach people earlier and more clearly."
