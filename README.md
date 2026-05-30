@@ -31,9 +31,9 @@ The aim is to make these patterns easier for doctors to review and easier for pa
 
 ## Overall Workflow
 
-![New patient framework example](docs/figures/new_patient_framework_example.png)
+![Personalised blood pressure monitoring pathway](paper/figures/overall%20image.png)
 
-**Figure.** The framework takes BP readings, calculates interpretable sleep-aware features, shows the patient profile, and keeps machine-learning support separate from final clinical judgement.
+**Figure.** The framework uses full 24-hour ABPM when available, and uses the ABPM-TSL model to support earlier ABPM prioritisation from simpler information when full monitoring is not yet available.
 
 ## What The App Does
 
