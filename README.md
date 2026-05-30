@@ -107,11 +107,7 @@ The trained student model used by the desktop app is:
 ABPM-TSL/models/student_abpm_tsl_torchscript.pt
 ```
 
-## Important Update About The Older ML Section
-
-Earlier versions of this README described the machine-learning work mainly as logistic regression and random forest on the labelled ABPM summary dataset. That is no longer the main model pathway.
-
-The current model pathway is:
+In simple terms, the model pathway is:
 
 ```text
 Full ABPM data
@@ -120,8 +116,6 @@ Full ABPM data
   -> limited-input student model learns to estimate those patterns
   -> desktop app uses the trained student model when available
 ```
-
-The older labelled ABPM summary dataset is still useful as background support and baseline comparison, but it should not be described as the final or main model.
 
 ## Gemma Report Assistant ✨
 
