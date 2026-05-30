@@ -95,6 +95,9 @@ async function initApp() {
 
   // Init manual entry
   initManualEntry(document.getElementById("manual-entry-container"));
+  if (typeof initLimitedPredict === "function") {
+    initLimitedPredict(document.getElementById("limited-predict-container"));
+  }
   initReportAssistant();
 
   // File upload

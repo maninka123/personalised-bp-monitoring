@@ -130,23 +130,57 @@ function buildTrafficBanner(p) {
   const caption = p.curve_caption || "";
   const priorityEmoji = { green: "✅", yellow: "⚠️", red: "🔴", grey: "⚪" }[level] || "";
   const details = p.patient_details || {};
-  const detailBits = [
-    details["Patient Name"] ? `Name: ${details["Patient Name"]}` : "",
-    details["Patient ID"] ? `ID: ${details["Patient ID"]}` : "",
-    details["Age"] ? `Age: ${details["Age"]}` : "",
-    details["Sex"] ? `Sex: ${details["Sex"]}` : "",
-    details["BMI"] ? `BMI: ${details["BMI"]}` : "",
-  ].filter(Boolean).join(" | ");
+  
+  const name = details["Patient Name"] || "";
+  const id = details["Patient ID"] || "";
+  const age = details["Age"] || "";
+  const sex = details["Sex"] ? details["Sex"] : "";
+  
+  const sexLower = sex.toLowerCase();
+  let sexEmoji = "";
+  if (sexLower.includes("female") || sexLower === "f") sexEmoji = "👩";
+  else if (sexLower.includes("male") || sexLower === "m") sexEmoji = "👨";
+  
+  const bmiVal = parseFloat(details["BMI"]);
+  let bmiDisplay = ``;
+  if (!isNaN(bmiVal)) {
+    let bmiClass = "bmi-normal";
+    if (bmiVal < 18.5) bmiClass = "bmi-underweight";
+    else if (bmiVal >= 25 && bmiVal < 30) bmiClass = "bmi-overweight";
+    else if (bmiVal >= 30) bmiClass = "bmi-obese";
+    bmiDisplay = `<span class="bmi-badge ${bmiClass}">BMI: <strong>${bmiVal}</strong></span>`;
+  }
 
   const d = document.createElement("div");
   d.className = "traffic-banner";
   d.innerHTML = `
     <div class="traffic-light ${level}"></div>
-    <div class="traffic-body">
-      <span class="tb-profile">Overall BP Profile: ${label}</span>
-      <span class="tb-priority ${level}">${priorityEmoji} ${p.priority || ""}</span>
-      ${detailBits ? `<div class="tb-issue"><strong>Patient:</strong> ${detailBits}</div>` : ""}
-      <div class="tb-issue"><strong>Main finding:</strong> ${caption}</div>
+    <div class="traffic-body" style="display:flex; justify-content:space-between; flex-direction:row; align-items: stretch; width: 100%; gap: 2rem;">
+      <div class="tb-left-group" style="display:flex; flex-direction:column; gap:0.8rem; flex: 1;">
+        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:1rem;">
+          <span class="tb-profile">Overall BP Profile: ${label}</span>
+          <span class="tb-priority ${level}" style="margin-left: 0.5rem">${priorityEmoji} ${p.priority || ""}</span>
+        </div>
+        <div class="tb-finding highlight-finding" style="margin-top: 0.5rem; background: #fffbeb; border-left: 4px solid #f59e0b; padding: 0.8rem; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+          <strong style="color: #b45309; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; display:block; margin-bottom: 0.3rem;">Main finding</strong>
+          <span style="font-size: 1rem; color: #1e293b; font-weight: 500;">${caption}</span>
+        </div>
+      </div>
+      
+      <div class="tb-right-group patient-card-wrapper" style="min-width: 260px; background: white; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+            <div>
+               <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em;">Patient</div>
+               <div style="font-size: 1.15rem; font-weight: 700; color: var(--text);">${name || id}</div>
+            </div>
+        </div>
+        <div style="display:flex; flex-wrap: wrap; gap: 1rem; align-items:center; font-size: 0.9rem; color: var(--text-secondary);">
+            ${age ? `<span>Age: <strong style="color:var(--text)">${age}</strong></span>` : ""}
+            ${sex ? `<span style="display:flex; align-items:center; gap: 0.3rem;" title="Sex: ${sex}">${sexEmoji} <strong style="color:var(--text)">${sex}</strong></span>` : ""}
+        </div>
+        ${id && name ? `<div style="font-size: 0.85rem; color: var(--text-muted)">ID: <strong>${id}</strong></div>` : ""}
+        ${bmiDisplay ? `<div style="margin-top: 0.2rem;">${bmiDisplay}</div>` : ""}
+      </div>
     </div>`;
   return d;
 }

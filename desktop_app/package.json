@@ -42,6 +42,11 @@
         "from": "sample-patient-inputs/",
         "to": "Sample Patient Inputs/",
         "filter": ["**/*"]
+      },
+      {
+        "from": "../ABPM-TSL/models/",
+        "to": "ABPM-TSL/models/",
+        "filter": ["student_abpm_tsl_torchscript.pt", "preprocessing.json"]
       }
     ],
     "win": {

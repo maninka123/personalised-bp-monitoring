@@ -1,0 +1,6 @@
+scenario,priority,priority_score,confidence,abnormal_dipping,morning_surge_high,nocturnal_hypertension,high_bp_burden,high_variability,dipping_proxy_pct,sleep_sbp_proxy,morning_surge_proxy
+complete_limited_input,Review soon / consider ABPM,0.535,96.0,0.572,0.423,0.490,0.476,0.427,2.7,131.9,4.1
+clinic_only,Review soon / consider ABPM,0.599,50.5,0.568,0.441,0.554,0.609,0.328,2.4,142.4,6.6
+no_home_bp,High ABPM review priority,0.808,79.3,0.826,0.546,0.795,0.776,0.376,-3.7,156.5,0.0
+high_morning,High ABPM review priority,0.760,96.0,0.678,0.846,0.616,0.616,0.512,0.0,142.9,15.1
+missing_lifestyle,Routine monitoring,0.388,80.7,0.416,0.373,0.338,0.325,0.366,6.4,122.9,7.1

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="430" viewBox="0 0 980 430" role="img" aria-label="App prediction flow">
+  <rect width="980" height="430" fill="#f8fafc"/>
+  <text x="490" y="42" text-anchor="middle" font-family="Inter, Arial" font-size="25" font-weight="700" fill="#0f172a">Limited-Input App Prediction Flow</text>
+  <rect x="70" y="125" width="180" height="105" rx="8" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="160" y="160" text-anchor="middle" font-family="Inter, Arial" font-size="16" font-weight="700" fill="#1e3a8a">Desktop Tab</text>
+  <text x="160" y="187" text-anchor="middle" font-family="Inter, Arial" font-size="12" fill="#1e40af">values can be blank</text>
+  <rect x="315" y="125" width="190" height="105" rx="8" fill="#ede9fe" stroke="#7c3aed"/>
+  <text x="410" y="160" text-anchor="middle" font-family="Inter, Arial" font-size="16" font-weight="700" fill="#5b21b6">FastAPI Endpoint</text>
+  <text x="410" y="187" text-anchor="middle" font-family="Inter, Arial" font-size="12" fill="#5b21b6">/api/limited-input-predict</text>
+  <rect x="570" y="125" width="180" height="105" rx="8" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="660" y="160" text-anchor="middle" font-family="Inter, Arial" font-size="16" font-weight="700" fill="#166534">Estimator</text>
+  <text x="660" y="187" text-anchor="middle" font-family="Inter, Arial" font-size="12" fill="#166534">risk + confidence</text>
+  <rect x="800" y="125" width="130" height="105" rx="8" fill="#fef3c7" stroke="#d97706"/>
+  <text x="865" y="160" text-anchor="middle" font-family="Inter, Arial" font-size="16" font-weight="700" fill="#92400e">Output</text>
+  <text x="865" y="187" text-anchor="middle" font-family="Inter, Arial" font-size="12" fill="#92400e">review priority</text>
+  <rect x="315" y="285" width="435" height="70" rx="8" fill="#fee2e2" stroke="#dc2626"/>
+  <text x="532" y="315" text-anchor="middle" font-family="Inter, Arial" font-size="15" font-weight="700" fill="#991b1b">Clinical boundary displayed in app</text>
+  <text x="532" y="340" text-anchor="middle" font-family="Inter, Arial" font-size="12" fill="#991b1b">prioritisation support only; not a diagnosis</text>
+  <path d="M250 178 H315" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M505 178 H570" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M750 178 H800" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M660 230 V285" stroke="#334155" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrow)"/>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+  </defs>
+</svg>

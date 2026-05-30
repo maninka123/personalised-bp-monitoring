@@ -25,7 +25,7 @@ console.log("=== Building Python backend with PyInstaller ===");
 console.log("[1/3] Checking Python dependencies...");
 try {
   execSync(
-    `python -c "import fastapi, uvicorn, pydantic, pandas, numpy, matplotlib, openpyxl; import PyInstaller"`,
+    `python -c "import fastapi, uvicorn, pydantic, pandas, numpy, matplotlib, openpyxl, torch; import PyInstaller"`,
     { cwd: BACKEND_DIR, stdio: "inherit" }
   );
 } catch {
@@ -57,10 +57,19 @@ const hiddenImports = [
   "matplotlib.backends.backend_pdf",
 ];
 const hiddenImportArgs = hiddenImports.map(name => `--hidden-import ${name}`).join(" ");
+const excludedModules = [
+  "transformers",
+  "tensorflow",
+  "jax",
+  "jaxlib",
+  "torchaudio",
+  "torchvision",
+];
+const excludedModuleArgs = excludedModules.map(name => `--exclude-module ${name}`).join(" ");
 const projectPathArg = `--paths "${PERSONALISED}"`;
 
 execSync(
-  `pyinstaller --onedir --noconfirm --clean --name server --additional-hooks-dir hooks ${projectPathArg} ${hiddenImportArgs} ${addDataArgs} server.py`,
+  `pyinstaller --onedir --noconfirm --clean --name server --additional-hooks-dir hooks ${projectPathArg} ${hiddenImportArgs} ${excludedModuleArgs} ${addDataArgs} server.py`,
   { cwd: BACKEND_DIR, stdio: "inherit" }
 );
 
