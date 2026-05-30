@@ -33,7 +33,11 @@ The aim is to make these patterns easier for doctors to review and easier for pa
 
 ![Personalised blood pressure monitoring pathway](paper/figures/overall%20image.png)
 
-**Figure.** The framework uses full 24-hour ABPM when available, and uses the ABPM-TSL model to support earlier ABPM prioritisation from simpler information when full monitoring is not yet available.
+**Overall pathway.**
+
+![24-hour BP report example](docs/figures/new_patient_framework_example.png)
+
+**24-hour BP report example.**
 
 ## What The App Does
 
